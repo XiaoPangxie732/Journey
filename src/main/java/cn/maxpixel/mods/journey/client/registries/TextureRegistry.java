@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 public class TextureRegistry {
     public static final ResourceLocation COPPER_WIRE = new ResourceLocation(JourneyMod.MODID, "block/copper_wire");
 
+//    @SubscribeEvent
 //    public static void stitchTexture(TextureStitchEvent.Pre event) {
 //    }
 }

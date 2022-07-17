@@ -6,22 +6,45 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
-import java.util.Objects;
+import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
 
 public class ControllerBlockEntity extends BlockEntity {
     private static final String START_KEY = "Start";
     private static final String SIZE_KEY = "Size";
-    private static final String STATE_KEY = "State";
-    private ControllerState state = ControllerState.BUILDING;
+    private static final String BUILDING_KEY = "Building";
 
-    private BlockPos.MutableBlockPos start = getBlockPos().mutable();
+    private BlockPos.MutableBlockPos start = new BlockPos.MutableBlockPos(0, 0, 0);
     private Vec3i size = MathUtil.ONE;
+    private boolean building = true;
 
-    public ControllerBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
-        super(BlockEntityRegistry.CONTROLLER.get(), pWorldPosition, pBlockState);
+    public ControllerBlockEntity(BlockPos worldPosition, BlockState blockState) {
+        super(BlockEntityRegistry.CONTROLLER.get(), worldPosition, blockState);
+    }
+
+    public void set(int x, int y, int z, int xLen, int yLen, int zLen) {
+        BlockPos pos = getBlockPos();
+        start.set(x - pos.getX(), y - pos.getY(), z - pos.getZ());
+        size = new Vec3i(xLen, yLen, zLen);
+        setChanged();
+    }
+
+    public BlockPos.MutableBlockPos getStart() {
+        return start;
+    }
+
+    public Vec3i getSize() {
+        return size;
+    }
+
+    @Override
+    public AABB getRenderBoundingBox() {
+        return INFINITE_EXTENT_AABB;
     }
 
     @Override
@@ -33,14 +56,14 @@ public class ControllerBlockEntity extends BlockEntity {
             if (startPos.length >= 3) {
                 this.start = new BlockPos.MutableBlockPos(startPos[0], startPos[1], startPos[2]);
             } else {
-                this.start = getBlockPos().mutable();
+                this.start = new BlockPos.MutableBlockPos(0, 0, 0);
             }
         } else {
-            this.start = getBlockPos().mutable();
+            this.start = new BlockPos.MutableBlockPos(0, 0, 0);
         }
 
         if (tag.contains(SIZE_KEY, Tag.TAG_INT_ARRAY)) {
-            int[] size = tag.getIntArray(START_KEY);
+            int[] size = tag.getIntArray(SIZE_KEY);
             if (size.length >= 3) {
                 this.size = new Vec3i(Math.max(size[0], 1), Math.max(size[1], 1), Math.max(size[2], 1));
             } else {
@@ -50,14 +73,14 @@ public class ControllerBlockEntity extends BlockEntity {
             this.size = MathUtil.ONE;
         }
 
-        if (tag.contains(STATE_KEY, Tag.TAG_STRING)) {
+        if (tag.contains(BUILDING_KEY, Tag.TAG_ANY_NUMERIC)) {
             try {
-                this.state = Objects.requireNonNull(ControllerState.valueOf(tag.getString(STATE_KEY)));
+                this.building = tag.getBoolean(BUILDING_KEY);
             } catch (IllegalArgumentException | NullPointerException e) {
-                this.state = ControllerState.BUILDING;
+                this.building = true;
             }
         } else {
-            this.state = ControllerState.BUILDING;
+            this.building = true;
         }
     }
 
@@ -66,11 +89,19 @@ public class ControllerBlockEntity extends BlockEntity {
         super.saveAdditional(tag);
         tag.putIntArray(START_KEY, new int[] {start.getX(), start.getY(), start.getZ()});
         tag.putIntArray(SIZE_KEY, new int[] {size.getX(), size.getY(), size.getZ()});
-        tag.putString(STATE_KEY, state.name());
+        if (building) {
+            tag.putBoolean(BUILDING_KEY, true);
+        }
     }
 
-    public enum ControllerState {
-        BUILDING,
-        CREATED
+    @Override
+    public CompoundTag getUpdateTag() {
+        return this.saveWithoutMetadata();
+    }
+
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 }

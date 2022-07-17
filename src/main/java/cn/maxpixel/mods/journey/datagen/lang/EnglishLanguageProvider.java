@@ -43,7 +43,7 @@ public class EnglishLanguageProvider extends LanguageProvider {
         addCustom(BlockRegistry.CONTROLLER.get(), I18nUtil.SCREEN_CATEGORY, "shrink_zn", "Shrink from Z-");
         addCustom(BlockRegistry.CONTROLLER.get(), I18nUtil.SCREEN_CATEGORY, "submit_area", "Submit marked area");
         addCustom(BlockRegistry.CONTROLLER.get(), I18nUtil.SCREEN_CATEGORY, "assemble", "Assemble");
-        addCustom(BlockRegistry.CONTROLLER.get(), I18nUtil.MESSAGE_CATEGORY, "submitted_area", "Submitted mark area");
+        addCustom(BlockRegistry.CONTROLLER.get(), I18nUtil.MESSAGE_CATEGORY, "submitted_area", "Submitted marked area");
     }
 
     private void addMarkerTranslations() {

@@ -10,6 +10,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,6 +50,11 @@ public record ServerboundControllerBlockChangePacket(Type type, BlockPos control
             BlockGetterUtil.getExistingBlockEntity(player.getLevel(), controllerPos, ControllerBlockEntity.class).ifPresent(blockEntity -> {
                 switch (type) {
                     case SUBMIT_AREA -> {
+                        BoundingBox box = new BoundingBox(controllerPos).encapsulate(start).encapsulate(end);
+                        blockEntity.set(box.minX(), box.minY(), box.minZ(), box.getXSpan(), box.getYSpan(), box.getZSpan());
+                        Level level = blockEntity.getLevel();
+                        BlockState state = level.getBlockState(controllerPos);
+                        level.sendBlockUpdated(controllerPos, state, state, 3);
                         player.displayClientMessage(SUBMITTED_AREA, false);
                     }
                     default -> JourneyMod.whyYouGetHere();
