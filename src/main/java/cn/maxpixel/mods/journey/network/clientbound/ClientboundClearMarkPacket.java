@@ -1,7 +1,7 @@
 package cn.maxpixel.mods.journey.network.clientbound;
 
 import cn.maxpixel.mods.journey.JourneyMod;
-import cn.maxpixel.mods.journey.client.function.MarkerItemFunction;
+import cn.maxpixel.mods.journey.item.MarkerItem;
 import cn.maxpixel.mods.journey.network.NetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
@@ -24,7 +24,7 @@ public class ClientboundClearMarkPacket {
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        MarkerItemFunction.clearMark();
+        MarkerItem.clearMark();
         JourneyMod.LOGGER.debug("Cleared mark of {}", Minecraft.getInstance().player.getGameProfile().getName());
         contextSupplier.get().setPacketHandled(true);
     }

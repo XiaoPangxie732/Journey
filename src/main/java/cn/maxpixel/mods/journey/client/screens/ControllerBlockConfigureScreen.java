@@ -1,7 +1,7 @@
 package cn.maxpixel.mods.journey.client.screens;
 
 import cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity;
-import cn.maxpixel.mods.journey.client.function.MarkerItemFunction;
+import cn.maxpixel.mods.journey.item.MarkerItem;
 import cn.maxpixel.mods.journey.network.serverbound.ServerboundControllerBlockChangePacket;
 import cn.maxpixel.mods.journey.registries.BlockRegistry;
 import cn.maxpixel.mods.journey.registries.ItemRegistry;
@@ -83,13 +83,13 @@ public class ControllerBlockConfigureScreen extends Screen {
         this.shrinkZN = addRenderableWidget(new Button(width / 2 + BUTTON_WIDTH / 2 + 1, 40 + 1 + BUTTON_HEIGHT + 1 + BUTTON_HEIGHT + 1 + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_ZN, btn -> {}));
 
         this.submitArea = addRenderableWidget(new Button(width / 2 - 151, 40 + 4 + 4 * BUTTON_HEIGHT, 302, BUTTON_HEIGHT, SUBMIT_AREA, btn -> {
-            if (MarkerItemFunction.start == null) {
+            if (MarkerItem.start == null) {
                 Minecraft.getInstance().player.displayClientMessage(START_ABSENT, false);
-            } else if (MarkerItemFunction.end == null) {
+            } else if (MarkerItem.end == null) {
                 Minecraft.getInstance().player.displayClientMessage(END_ABSENT, false);
             } else {
-                ServerboundControllerBlockChangePacket.send(blockEntity.getBlockPos(), MarkerItemFunction.start, MarkerItemFunction.end);
-                MarkerItemFunction.clearMark();
+                ServerboundControllerBlockChangePacket.send(blockEntity.getBlockPos(), MarkerItem.start, MarkerItem.end);
+                MarkerItem.clearMark();
             }
         }));
         this.assemble = addRenderableWidget(new Button(width / 2 - 151, 40 + 5 + 5 * BUTTON_HEIGHT, 150, BUTTON_HEIGHT, ASSEMBLE, btn -> {}));

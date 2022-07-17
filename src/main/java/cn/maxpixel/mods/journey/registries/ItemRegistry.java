@@ -1,19 +1,11 @@
 package cn.maxpixel.mods.journey.registries;
 
+import cn.maxpixel.mods.journey.item.MarkerItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ItemRegistry {
-    /**
-     * @see cn.maxpixel.mods.journey.client.function.MarkerItemFunction
-     */
-    public static final RegistryObject<Item> MARKER = Registries.ITEMS.register("marker", () -> new Item(new Item.Properties().tab(Tabs.MAIN)) {
-        @Override
-        public boolean isFoil(ItemStack pStack) {
-            return true;
-        }
-    });
+    public static final RegistryObject<Item> MARKER = Registries.ITEMS.register("marker", () -> new MarkerItem(new Item.Properties().tab(Tabs.MAIN)));
 
     static void init() { /* Trigger <clinit> */ }
 }
