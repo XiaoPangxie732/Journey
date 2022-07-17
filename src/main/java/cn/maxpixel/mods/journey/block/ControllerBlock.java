@@ -1,6 +1,7 @@
 package cn.maxpixel.mods.journey.block;
 
 import cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity;
+import cn.maxpixel.mods.journey.client.screens.ScreenManager;
 import cn.maxpixel.mods.journey.util.BlockGetterUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -37,7 +38,7 @@ public class ControllerBlock extends BaseEntityBlock {
         return BlockGetterUtil.getExistingBlockEntity(level, pos, ControllerBlockEntity.class)
                 .map(blockEntity -> {
                     if (level.isClientSide) {
-                        blockEntity.openScreen();
+                        ScreenManager.openControllerBlockConfigureScreen(blockEntity);
                     }
                     return InteractionResult.sidedSuccess(level.isClientSide);
                 }).orElse(InteractionResult.PASS);

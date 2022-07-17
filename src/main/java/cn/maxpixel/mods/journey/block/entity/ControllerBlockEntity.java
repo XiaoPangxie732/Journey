@@ -1,9 +1,7 @@
 package cn.maxpixel.mods.journey.block.entity;
 
-import cn.maxpixel.mods.journey.client.screens.ControllerBlockConfigureScreen;
 import cn.maxpixel.mods.journey.registries.BlockEntityRegistry;
 import cn.maxpixel.mods.journey.util.MathUtil;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
@@ -17,8 +15,6 @@ public class ControllerBlockEntity extends BlockEntity {
     private static final String START_KEY = "Start";
     private static final String SIZE_KEY = "Size";
     private static final String STATE_KEY = "State";
-
-    private ControllerBlockConfigureScreen screen;
     private ControllerState state = ControllerState.BUILDING;
 
     private BlockPos.MutableBlockPos start = getBlockPos().mutable();
@@ -26,13 +22,6 @@ public class ControllerBlockEntity extends BlockEntity {
 
     public ControllerBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(BlockEntityRegistry.CONTROLLER.get(), pWorldPosition, pBlockState);
-    }
-
-    public void openScreen() {
-        if (screen == null) {
-            this.screen = new ControllerBlockConfigureScreen(this);
-        }
-        Minecraft.getInstance().setScreen(screen);
     }
 
     @Override
