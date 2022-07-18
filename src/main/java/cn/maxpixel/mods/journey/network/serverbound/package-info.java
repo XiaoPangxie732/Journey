@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cn.maxpixel.mods.journey.datagen.lang;
+package cn.maxpixel.mods.journey.network.serverbound;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

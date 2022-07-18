@@ -17,14 +17,16 @@ public class ControllerBlockEntityRenderer implements BlockEntityRenderer<Contro
 
     @Override
     public void render(ControllerBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        BlockPos start = blockEntity.getStart();
-        Vec3i size = blockEntity.getSize();
-        if (size.getX() >= 1 && size.getY() >= 1 && size.getZ() >= 1) {
-            VertexConsumer lines = bufferSource.getBuffer(RenderType.lines());
-            int x = start.getX();
-            int y = start.getY();
-            int z = start.getZ();
-            LevelRenderer.renderLineBox(poseStack, lines, x, y, z, x + size.getX(), y + size.getY(), z + size.getZ(), .9f, .9f, .9f, 1f, .5f, .5f, .5f);
+        if (blockEntity.isBuilding()) {
+            BlockPos start = blockEntity.getStart();
+            Vec3i size = blockEntity.getSize();
+            if (size.getX() >= 1 && size.getY() >= 1 && size.getZ() >= 1) {
+                VertexConsumer lines = bufferSource.getBuffer(RenderType.lines());
+                int x = start.getX();
+                int y = start.getY();
+                int z = start.getZ();
+                LevelRenderer.renderLineBox(poseStack, lines, x, y, z, x + size.getX(), y + size.getY(), z + size.getZ(), .9f, .9f, .9f, 1f, .5f, .5f, .5f);
+            }
         }
     }
 

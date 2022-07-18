@@ -31,7 +31,10 @@ public class ControllerBlockEntity extends BlockEntity {
         BlockPos pos = getBlockPos();
         start.set(x - pos.getX(), y - pos.getY(), z - pos.getZ());
         size = new Vec3i(xLen, yLen, zLen);
-        setChanged();
+    }
+
+    public void setSize(Vec3i size) {
+        this.size = size;
     }
 
     public BlockPos.MutableBlockPos getStart() {
@@ -40,6 +43,10 @@ public class ControllerBlockEntity extends BlockEntity {
 
     public Vec3i getSize() {
         return size;
+    }
+
+    public boolean isBuilding() {
+        return building;
     }
 
     @Override

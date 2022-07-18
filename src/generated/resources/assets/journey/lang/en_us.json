@@ -4,7 +4,7 @@
   "item.journey.marker": "Marker",
   "itemGroup.journey.main": "Journey",
   "itemGroup.journey.memes": "Journey | Memes",
-  "message.journey.controller.submitted_area": "Submitted mark area",
+  "message.journey.controller.submitted_area": "Submitted marked area",
   "message.journey.marker.end.absent": "End position is absent",
   "message.journey.marker.end.set": "Set end position: %s",
   "message.journey.marker.start.absent": "Start position is absent",

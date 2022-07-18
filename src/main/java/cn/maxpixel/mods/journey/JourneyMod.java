@@ -19,7 +19,8 @@ public class JourneyMod {
         NetworkManager.registerMessages();
     }
 
-    public static void whyYouGetHere() {
-        LOGGER.error("Why you get here???");
+    public static <T> T whyYouGetHere() {
+        LOGGER.error("Why you get here???", new Throwable());
+        return null;
     }
 }
