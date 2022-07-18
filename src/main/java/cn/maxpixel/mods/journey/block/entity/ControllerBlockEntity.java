@@ -96,9 +96,7 @@ public class ControllerBlockEntity extends BlockEntity {
         super.saveAdditional(tag);
         tag.putIntArray(START_KEY, new int[] {start.getX(), start.getY(), start.getZ()});
         tag.putIntArray(SIZE_KEY, new int[] {size.getX(), size.getY(), size.getZ()});
-        if (building) {
-            tag.putBoolean(BUILDING_KEY, true);
-        }
+        tag.putBoolean(BUILDING_KEY, building);
     }
 
     @Override
