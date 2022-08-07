@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cn.maxpixel.mods.journey.client.renderers.be;
+package cn.maxpixel.mods.journey.client.screens;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

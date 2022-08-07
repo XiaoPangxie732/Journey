@@ -1,6 +1,8 @@
 package cn.maxpixel.mods.journey.block.entity;
 
+import cn.maxpixel.mods.journey.entity.StructureEntity;
 import cn.maxpixel.mods.journey.registries.BlockEntityRegistry;
+import cn.maxpixel.mods.journey.registries.EntityRegistry;
 import cn.maxpixel.mods.journey.util.MathUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -14,17 +16,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 public class ControllerBlockEntity extends BlockEntity {
-    private static final String START_KEY = "Start";
-    private static final String SIZE_KEY = "Size";
+    public static final String START_KEY = "Start";
+    public static final String SIZE_KEY = "Size";
     private static final String BUILDING_KEY = "Building";
+    public static final String STRUCTURE_ID_KEY = "StructureID";
 
     private BlockPos.MutableBlockPos start = new BlockPos.MutableBlockPos(0, 0, 0);
     private Vec3i size = MathUtil.ONE;
     private boolean building = true;
+    private UUID structureId = UUID.randomUUID();
 
     public ControllerBlockEntity(BlockPos worldPosition, BlockState blockState) {
-        super(BlockEntityRegistry.CONTROLLER.get(), worldPosition, blockState);
+        super(BlockEntityRegistry.CONTROLLER, worldPosition, blockState);
     }
 
     public void set(int x, int y, int z, int xLen, int yLen, int zLen) {
@@ -47,6 +53,26 @@ public class ControllerBlockEntity extends BlockEntity {
 
     public boolean isBuilding() {
         return building;
+    }
+
+    public void assemble() {
+        if (!building || level == null || level.isClientSide) return;
+
+        StructureEntity entity = EntityRegistry.STRUCTURE.create(level);
+        entity.moveTo(
+                start.getX() + size.getX() / 2d,
+                start.getY() + size.getY() / 2d,
+                start.getZ() + size.getZ() / 2d,
+                0, 0
+        );
+        entity.setStructureId(structureId);
+        entity.createStructureLevel(level, start, size, worldPosition, BlockPos.betweenClosed(start.getX(), start.getY(), start.getZ(),
+                start.getX() + size.getX(), start.getY() + size.getY(), start.getZ() + size.getZ()));
+        level.addFreshEntity(entity);
+    }
+
+    public void disassemble() { // TODO: disassemble
+        if (building || level.isClientSide) return;
     }
 
     @Override
@@ -89,6 +115,12 @@ public class ControllerBlockEntity extends BlockEntity {
         } else {
             this.building = true;
         }
+
+        if (tag.hasUUID(STRUCTURE_ID_KEY)) {
+            this.structureId = tag.getUUID(STRUCTURE_ID_KEY);
+        } else {
+            this.structureId = UUID.randomUUID();
+        }
     }
 
     @Override
@@ -97,6 +129,7 @@ public class ControllerBlockEntity extends BlockEntity {
         tag.putIntArray(START_KEY, new int[] {start.getX(), start.getY(), start.getZ()});
         tag.putIntArray(SIZE_KEY, new int[] {size.getX(), size.getY(), size.getZ()});
         tag.putBoolean(BUILDING_KEY, building);
+        tag.putUUID(STRUCTURE_ID_KEY, structureId);
     }
 
     @Override

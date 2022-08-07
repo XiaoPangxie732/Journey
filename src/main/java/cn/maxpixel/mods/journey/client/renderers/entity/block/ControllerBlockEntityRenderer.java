@@ -1,4 +1,4 @@
-package cn.maxpixel.mods.journey.client.renderers.be;
+package cn.maxpixel.mods.journey.client.renderers.entity.block;
 
 import cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -25,14 +25,15 @@ public class ControllerBlockEntityRenderer implements BlockEntityRenderer<Contro
                 int x = start.getX();
                 int y = start.getY();
                 int z = start.getZ();
-                LevelRenderer.renderLineBox(poseStack, lines, x, y, z, x + size.getX(), y + size.getY(), z + size.getZ(), .9f, .9f, .9f, 1f, .5f, .5f, .5f);
+                LevelRenderer.renderLineBox(poseStack, lines, x, y, z, x + size.getX(), y + size.getY(), z + size.getZ(),
+                        .9f, .9f, .9f, 1f, .5f, .5f, .5f);
             }
         }
     }
 
     @Override
-    public boolean shouldRenderOffScreen(ControllerBlockEntity pBlockEntity) {
-        return true;
+    public boolean shouldRenderOffScreen(ControllerBlockEntity blockEntity) {
+        return blockEntity.isBuilding();
     }
 
     @Override

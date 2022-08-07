@@ -10,6 +10,7 @@
   "message.journey.marker.start.absent": "Start position is absent",
   "message.journey.marker.start.set": "Set start position: %s",
   "screen.journey.controller.assemble": "Assemble",
+  "screen.journey.controller.disassemble": "Disassemble",
   "screen.journey.controller.expand_xn": "Expand to X-",
   "screen.journey.controller.expand_xp": "Expand to X+",
   "screen.journey.controller.expand_yn": "Expand to Y-",

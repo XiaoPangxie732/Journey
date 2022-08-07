@@ -29,7 +29,7 @@ public class CopperWireBlockEntity extends BlockEntity {
     private final LazyOptional<IEnergyStorage> optional = LazyOptional.of(() -> storage);
 
     public CopperWireBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
-        super(BlockEntityRegistry.COPPER_WIRE.get(), pWorldPosition, pBlockState);
+        super(BlockEntityRegistry.COPPER_WIRE, pWorldPosition, pBlockState);
     }
 
     public short getCount() {
@@ -94,7 +94,7 @@ public class CopperWireBlockEntity extends BlockEntity {
         private void setEnergyStored(int energy) {
             if (getMaxEnergyStored() - energy < 1000) {
                 BlockPos pos = getBlockPos();
-                getLevel().explode(null,
+                level.explode(null,
                         pos.getX() + .5d, pos.getY() + .5d, pos.getZ() + .5d,
                         6.5f, true,
                         Explosion.BlockInteraction.DESTROY

@@ -1,6 +1,5 @@
 package cn.maxpixel.mods.journey;
 
-import cn.maxpixel.mods.journey.network.NetworkManager;
 import cn.maxpixel.mods.journey.registries.Registries;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.fml.common.Mod;
@@ -14,9 +13,8 @@ public class JourneyMod {
 
     public JourneyMod() {
         LOGGER.info("Constructing Journey Mod");
-        LOGGER.debug("Registering stuffs & creating creative mod tabs");
+        LOGGER.debug("Registering stuffs");
         Registries.register(FMLJavaModLoadingContext.get());
-        NetworkManager.registerMessages();
     }
 
     public static <T> T whyYouGetHere() {

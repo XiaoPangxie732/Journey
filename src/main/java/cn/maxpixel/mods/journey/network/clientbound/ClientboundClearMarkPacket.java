@@ -1,6 +1,7 @@
 package cn.maxpixel.mods.journey.network.clientbound;
 
 import cn.maxpixel.mods.journey.JourneyMod;
+import cn.maxpixel.mods.journey.annotation.CalledOn;
 import cn.maxpixel.mods.journey.item.MarkerItem;
 import cn.maxpixel.mods.journey.network.NetworkManager;
 import net.minecraft.client.Minecraft;
@@ -14,13 +15,18 @@ import net.minecraftforge.network.PacketDistributor;
 
 import java.util.function.Supplier;
 
+/**
+ * @see MarkerItem
+ */
 @Mod.EventBusSubscriber(modid = JourneyMod.MODID)
 public class ClientboundClearMarkPacket {
-    public void encode(FriendlyByteBuf buf) {
+    public ClientboundClearMarkPacket() {
     }
 
-    public static ClientboundClearMarkPacket decode(FriendlyByteBuf buf) {
-        return new ClientboundClearMarkPacket();
+    public ClientboundClearMarkPacket(FriendlyByteBuf buf) {
+    }
+
+    public void encode(FriendlyByteBuf buf) {
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
@@ -30,7 +36,8 @@ public class ClientboundClearMarkPacket {
     }
 
     @SubscribeEvent
-    public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) { // Only called on server side
+    @CalledOn(CalledOn.Side.SERVER)
+    public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         JourneyMod.LOGGER.debug("Clearing mark of {}", event.getPlayer().getGameProfile().getName());
         NetworkManager.CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new ClientboundClearMarkPacket());
     }

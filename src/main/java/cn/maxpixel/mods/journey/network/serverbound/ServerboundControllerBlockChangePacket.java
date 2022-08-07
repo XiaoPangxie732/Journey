@@ -22,22 +22,22 @@ import java.util.function.Supplier;
 public record ServerboundControllerBlockChangePacket(Type type, BlockPos controllerPos,
                                                      @Nullable BlockPos start, @Nullable BlockPos end,
                                                      @Nullable AdjustType adjustType, @Nullable AdjustAxis adjustAxis) {
-    private static final Component SUBMITTED_AREA = I18nUtil.getTranslation(BlockRegistry.CONTROLLER.get(), I18nUtil.MESSAGE_CATEGORY, "submitted_area");
+    private static final Component SUBMITTED_AREA = I18nUtil.getTranslation(BlockRegistry.CONTROLLER, I18nUtil.MESSAGE_CATEGORY, "submitted_area");
 
     public static void send(BlockPos controllerPos, BlockPos start, BlockPos end) {
-        NetworkManager.CHANNEL.sendToServer(create(controllerPos, start, end));
+        NetworkManager.CHANNEL.sendToServer(new ServerboundControllerBlockChangePacket(controllerPos, start, end));
     }
 
     public static void send(BlockPos controllerPos, AdjustType adjustType, AdjustAxis adjustAxis) {
-        NetworkManager.CHANNEL.sendToServer(create(controllerPos, adjustType, adjustAxis));
+        NetworkManager.CHANNEL.sendToServer(new ServerboundControllerBlockChangePacket(controllerPos, adjustType, adjustAxis));
     }
 
-    public static ServerboundControllerBlockChangePacket create(BlockPos controllerPos, BlockPos start, BlockPos end) {
-        return new ServerboundControllerBlockChangePacket(Type.SUBMIT_AREA, controllerPos, start, end, null, null);
+    public ServerboundControllerBlockChangePacket(BlockPos controllerPos, BlockPos start, BlockPos end) {
+        this(Type.SUBMIT_AREA, controllerPos, start, end, null, null);
     }
 
-    public static ServerboundControllerBlockChangePacket create(BlockPos controllerPos, AdjustType adjustType, AdjustAxis adjustAxis) {
-        return new ServerboundControllerBlockChangePacket(Type.ADJUST, controllerPos, null, null, adjustType, adjustAxis);
+    public ServerboundControllerBlockChangePacket(BlockPos controllerPos, AdjustType adjustType, AdjustAxis adjustAxis) {
+        this(Type.ADJUST, controllerPos, null, null, adjustType, adjustAxis);
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -51,8 +51,8 @@ public record ServerboundControllerBlockChangePacket(Type type, BlockPos control
 
     public static ServerboundControllerBlockChangePacket decode(FriendlyByteBuf buf) {
         return switch (buf.readEnum(Type.class)) {
-            case SUBMIT_AREA -> create(buf.readBlockPos(), buf.readBlockPos(), buf.readBlockPos());
-            case ADJUST -> create(buf.readBlockPos(), buf.readEnum(AdjustType.class), buf.readEnum(AdjustAxis.class));
+            case SUBMIT_AREA -> new ServerboundControllerBlockChangePacket(buf.readBlockPos(), buf.readBlockPos(), buf.readBlockPos());
+            case ADJUST -> new ServerboundControllerBlockChangePacket(buf.readBlockPos(), buf.readEnum(AdjustType.class), buf.readEnum(AdjustAxis.class));
         };
     }
 

@@ -1,9 +1,10 @@
 14e801ec90c4a532bc03f353fe41b73473395466 assets/journey/blockstates/controller.json
 bb14bc24aae0767fecee44850f4d45f8f0dcf7b7 assets/journey/blockstates/copper_wire.json
-f827da26f9fd4270d2e54e386ffb20e4717be212 assets/journey/lang/en_us.json
-fa41aced40928f70abf977101279cf6f2817ebd8 assets/journey/lang/zh_cn.json
+c35e1b5bc6e4055f0f2b0fb3124d92474e66851a assets/journey/lang/en_us.json
+d0a1406341197308432bf1f13a90f8a265690c81 assets/journey/lang/zh_cn.json
 0df33ce78d8576bca59c31e2bb422e1a4d1ba497 assets/journey/models/block/controller.json
 ef7ba6bf9a4dda58af3a7d7c459855986db69266 assets/journey/models/block/copper_wire.json
 194eebbc0372b8e6c6329e1ce51f4e1ef7bc4930 assets/journey/models/item/controller.json
 00c541ab3ed6df29e4e152751f5621f175b62289 assets/journey/models/item/copper_wire.json
 49001223ab9317c14498ec8ab344a1182c0f5a46 assets/journey/models/item/marker.json
+5bf80a217a17c9b2a72590d3f7c0dc8a1a29399f data/journey/tags/blocks/weak.json

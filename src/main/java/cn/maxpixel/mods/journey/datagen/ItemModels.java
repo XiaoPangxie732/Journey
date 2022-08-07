@@ -12,6 +12,6 @@ public class ItemModels extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        withExistingParent(ItemRegistry.MARKER.get().getRegistryName().getPath(), "item/stick");
+        withExistingParent(ItemRegistry.MARKER.getRegistryName().getPath(), "item/stick");
     }
 }

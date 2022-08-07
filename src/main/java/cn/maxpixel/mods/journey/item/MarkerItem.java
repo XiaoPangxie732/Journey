@@ -13,6 +13,9 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * @see cn.maxpixel.mods.journey.network.clientbound.ClientboundClearMarkPacket
+ */
 public class MarkerItem extends Item {
     public static BlockPos start;
     public static BlockPos end;
@@ -52,12 +55,12 @@ public class MarkerItem extends Item {
             switch (action) {
                 case START -> {
                     start = pos;
-                    player.displayClientMessage(I18nUtil.getTranslation(ItemRegistry.MARKER.get(), I18nUtil.MESSAGE_CATEGORY, "start.set", pos.toShortString()), false);
+                    player.displayClientMessage(I18nUtil.getTranslation(ItemRegistry.MARKER, I18nUtil.MESSAGE_CATEGORY, "start.set", pos.toShortString()), false);
                     return true;
                 }
                 case END -> {
                     end = pos;
-                    player.displayClientMessage(I18nUtil.getTranslation(ItemRegistry.MARKER.get(), I18nUtil.MESSAGE_CATEGORY, "end.set", pos.toShortString()), false);
+                    player.displayClientMessage(I18nUtil.getTranslation(ItemRegistry.MARKER, I18nUtil.MESSAGE_CATEGORY, "end.set", pos.toShortString()), false);
                     return true;
                 }
                 default -> JourneyMod.whyYouGetHere();

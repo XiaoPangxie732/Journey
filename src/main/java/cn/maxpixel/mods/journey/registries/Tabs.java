@@ -9,7 +9,7 @@ public class Tabs {
     public static final CreativeModeTab MAIN = new CreativeModeTab(MAIN_LABEL) {
         @Override
         public ItemStack makeIcon() {
-            return new ItemStack(BlockRegistry.CONTROLLER.get());
+            return new ItemStack(BlockRegistry.CONTROLLER);
         }
     };
 

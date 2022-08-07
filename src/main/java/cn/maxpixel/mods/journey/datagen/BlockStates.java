@@ -22,9 +22,9 @@ public class BlockStates extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        simpleBlockWithItem(BlockRegistry.CONTROLLER.get(), this::cubeAll);
-        simpleBlockWithItem(BlockRegistry.COPPER_WIRE.get(), block -> models()
+        simpleBlockWithItem(BlockRegistry.CONTROLLER, this::cubeAll);
+        simpleBlockWithItem(BlockRegistry.COPPER_WIRE, block -> models()
                 .getBuilder(block.getRegistryName().getPath())
-                .texture("particle", blockTexture(BlockRegistry.COPPER_WIRE.get())));
+                .texture("particle", blockTexture(BlockRegistry.COPPER_WIRE)));
     }
 }

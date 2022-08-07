@@ -1,4 +1,4 @@
-package cn.maxpixel.mods.journey.client.renderers.be;
+package cn.maxpixel.mods.journey.client.renderers.entity.block;
 
 import cn.maxpixel.mods.journey.block.entity.CopperWireBlockEntity;
 import cn.maxpixel.mods.journey.client.registries.TextureRegistry;
