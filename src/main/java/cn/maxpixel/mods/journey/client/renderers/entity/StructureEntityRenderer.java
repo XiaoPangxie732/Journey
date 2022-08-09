@@ -3,6 +3,9 @@ package cn.maxpixel.mods.journey.client.renderers.entity;
 import cn.maxpixel.mods.journey.entity.StructureEntity;
 import cn.maxpixel.mods.journey.level.StructureLevel;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -49,16 +52,19 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
     public void render(StructureEntity entity, float yaw, float partialTick, PoseStack stack, MultiBufferSource buffer, int packedLight) {// TODO: culling, optimization, etc.
         StructureLevel structureLevel = entity.getStructureLevel();
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+        stack.pushPose();
+        Vec3 relative = entity.getOriginRelative();
+        stack.translate(-relative.x, -relative.y, -relative.z);
         for (BlockPos pos : BlockPos.betweenClosed(structureLevel.start, structureLevel.start.offset(structureLevel.size))) {
+            stack.pushPose();
+            stack.translate(pos.getX(), pos.getY(), pos.getZ());
             BlockState state = structureLevel.getBlockState(pos);
             FluidState fluid = state.getFluidState();
-            stack.pushPose();
-            Vec3 relative = entity.getOriginRelative();
-            stack.translate(pos.getX() - relative.x, pos.getY() - relative.y, pos.getZ() - relative.z);
             for (RenderType chunkBufferLayer : CHUNK_BUFFER_LAYERS) {
                 ForgeHooksClient.setRenderType(chunkBufferLayer);
                 if (!fluid.isEmpty() && ItemBlockRenderTypes.canRenderInLayer(fluid, chunkBufferLayer)) {
-                    blockRenderer.renderLiquid(pos, structureLevel, buffer.getBuffer(chunkBufferLayer), state, fluid);
+                    blockRenderer.renderLiquid(pos, structureLevel, new TransformingVertexConsumer(
+                            buffer.getBuffer(chunkBufferLayer), stack.last()), state, fluid);
                 }
                 if (state.getRenderShape() != RenderShape.INVISIBLE && ItemBlockRenderTypes.canRenderInLayer(state, chunkBufferLayer)) {
                     blockRenderer.renderBatched(
@@ -68,8 +74,15 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
                 }
             }
             ForgeHooksClient.setRenderType(null);
+//            if (state.hasBlockEntity()) {
+//                BlockEntity blockEntity = structureLevel.getBlockEntity(pos);
+//                if (blockEntity != null) {
+//
+//                }
+//            }
             stack.popPose();
         }
+        stack.popPose();
 //        Vec3 camPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
 //        prepareChunks(entity, structureLevel, stack, camPos);
     }
@@ -175,4 +188,69 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
 //            }
 //        }
 //    }
+
+    public static class TransformingVertexConsumer implements VertexConsumer {
+        private final VertexConsumer parent;
+        private final PoseStack.Pose pose;
+
+        public TransformingVertexConsumer(VertexConsumer parent, PoseStack.Pose pose) {
+            this.parent = parent;
+            this.pose = pose;
+        }
+
+        @Override
+        public TransformingVertexConsumer vertex(double x, double y, double z) {
+            Vector4f vector = new Vector4f((float) x, (float) y, (float) z, 1);
+            vector.transform(pose.pose());
+            parent.vertex(vector.x(), vector.y(), vector.z());
+            return this;
+        }
+
+        @Override
+        public TransformingVertexConsumer color(int pRed, int pGreen, int pBlue, int pAlpha) {
+            parent.color(pRed, pGreen, pBlue, pAlpha);
+            return this;
+        }
+
+        @Override
+        public TransformingVertexConsumer uv(float pU, float pV) {
+            parent.uv(pU, pV);
+            return this;
+        }
+
+        @Override
+        public TransformingVertexConsumer overlayCoords(int pU, int pV) {
+            parent.overlayCoords(pU, pV);
+            return this;
+        }
+
+        @Override
+        public TransformingVertexConsumer uv2(int pU, int pV) {
+            parent.uv2(pU, pV);
+            return this;
+        }
+
+        @Override
+        public TransformingVertexConsumer normal(float x, float y, float z) {
+            Vector3f vector = new Vector3f(x, y, z);
+            vector.transform(pose.normal());
+            parent.normal(vector.x(), vector.y(), vector.z());
+            return this;
+        }
+
+        @Override
+        public void endVertex() {
+            parent.endVertex();
+        }
+
+        @Override
+        public void defaultColor(int pDefaultR, int pDefaultG, int pDefaultB, int pDefaultA) {
+            parent.defaultColor(pDefaultR, pDefaultG, pDefaultB, pDefaultA);
+        }
+
+        @Override
+        public void unsetDefaultColor() {
+            parent.unsetDefaultColor();
+        }
+    }
 }
