@@ -19,7 +19,6 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -38,14 +37,19 @@ public class StructureChunkSource extends ChunkSource {
     public StructureChunkSource(StructureLevel level) {
         this.level = level;
         this.isClientSide = level.isClientSide;
-        this.storage = isClientSide ? new ClientStorage() : new ServerStorage();
         this.lightEngine = new LevelLightEngine(this, true, level.dimensionType().hasSkyLight());
+        this.storage = isClientSide ? new ClientStorage() : new ServerStorage();
+    }
+
+    public void loadChunks() {
+        storage.loadChunks();
     }
 
     @Nullable
     @Override
-    public LevelChunk getChunk(int pChunkX, int pChunkZ, ChunkStatus pRequiredStatus, boolean pLoad) {
-        return storage.getChunk(pChunkX, pChunkZ, pRequiredStatus, pLoad);
+    public StructureLevelChunk getChunk(int pChunkX, int pChunkZ, ChunkStatus status, boolean pLoad) {
+        if (status != ChunkStatus.FULL) return null;
+        return storage.getChunk(pChunkX, pChunkZ, status, pLoad);
     }
 
     @Override
@@ -65,7 +69,7 @@ public class StructureChunkSource extends ChunkSource {
         return storage.getLoadedChunks().size();
     }
 
-    public ObjectCollection<LevelChunk> getLoadedChunks() {
+    public ObjectCollection<StructureLevelChunk> getLoadedChunks() {
         return storage.getLoadedChunks().values();
     }
 
@@ -100,9 +104,12 @@ public class StructureChunkSource extends ChunkSource {
     }
 
     private interface Storage {
-        @Nullable LevelChunk getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load);
+        @CalledOn(CalledOn.Side.SERVER)
+        void loadChunks();
 
-        Long2ObjectOpenHashMap<LevelChunk> getLoadedChunks();
+        @Nullable StructureLevelChunk getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load);
+
+        Long2ObjectOpenHashMap<StructureLevelChunk> getLoadedChunks();
 
         @CalledOn(CalledOn.Side.CLIENT)
         default void updateClientChunks(ClientboundLevelChunkPacketData chunkData, int chunkX, int chunkZ) {
@@ -120,24 +127,28 @@ public class StructureChunkSource extends ChunkSource {
     }
 
     private class ClientStorage implements Storage {
-        private final Long2ObjectOpenHashMap<LevelChunk> loadedChunks = new Long2ObjectOpenHashMap<>();
+        private final Long2ObjectOpenHashMap<StructureLevelChunk> loadedChunks = new Long2ObjectOpenHashMap<>();
 
         @Override
-        public LevelChunk getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load) {
+        public void loadChunks() {
+        }
+
+        @Override
+        public StructureLevelChunk getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load) {
             return loadedChunks.get(ChunkPos.asLong(chunkX, chunkZ));
         }
 
         @Override
-        public Long2ObjectOpenHashMap<LevelChunk> getLoadedChunks() {
+        public Long2ObjectOpenHashMap<StructureLevelChunk> getLoadedChunks() {
             return loadedChunks;
         }
 
         @Override
         public void updateClientChunks(ClientboundLevelChunkPacketData chunkData, int chunkX, int chunkZ) {
             long chunkPos = ChunkPos.asLong(chunkX, chunkZ);
-            LevelChunk chunk = loadedChunks.computeIfAbsent(chunkPos, pos -> new LevelChunk(level, new ChunkPos(pos)));
+            StructureLevelChunk chunk = loadedChunks.computeIfAbsent(chunkPos, pos -> new StructureLevelChunk(level, new ChunkPos(pos)));
             if (chunk.getPos().toLong() != chunkPos) {
-                chunk = new LevelChunk(level, new ChunkPos(chunkX, chunkZ));
+                chunk = new StructureLevelChunk(level, new ChunkPos(chunkX, chunkZ));
             }
             chunk.replaceWithPacketData(chunkData.getReadBuffer(), chunkData.getHeightmaps(),
                     chunkData.getBlockEntitiesTagsConsumer(chunkX, chunkZ));
@@ -174,36 +185,37 @@ public class StructureChunkSource extends ChunkSource {
                 level.getServer().getWorldPath(LevelResources.STRUCTURES).resolve(level.getStructureId().toString()),
                 level.getServer().getFixerUpper(), true// TODO: Change this?
         );
-        private final Long2ObjectOpenHashMap<LevelChunk> loadedChunks = new Long2ObjectOpenHashMap<>();
+        private final Long2ObjectOpenHashMap<StructureLevelChunk> loadedChunks = new Long2ObjectOpenHashMap<>();
 
         private long lastInhabitedUpdate;
 
-        public ServerStorage() {
+        @CalledOn(CalledOn.Side.SERVER)
+        public void loadChunks() {
             int maxX = SectionPos.blockToSectionCoord(level.getBox().maxX());
             int maxZ = SectionPos.blockToSectionCoord(level.getBox().maxZ());
-            for (int x = SectionPos.blockToSectionCoord(level.getBox().minX()); x < maxX; x++) {
-                for (int z = SectionPos.blockToSectionCoord(level.getBox().minZ()); z < maxZ; z++) {
+            for (int x = SectionPos.blockToSectionCoord(level.getBox().minX()); x <= maxX; x++) {
+                for (int z = SectionPos.blockToSectionCoord(level.getBox().minZ()); z <= maxZ; z++) {
                     getChunk(x, z, ChunkStatus.FULL, true);
                 }
             }
         }
 
         @Override
-        public LevelChunk getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load) { // TODO: ChunkStatus, load
+        public StructureLevelChunk getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load) { // TODO: ChunkStatus, load
             return loadedChunks.computeIfAbsent(ChunkPos.asLong(chunkX, chunkZ), this::tryLoadingChunk);
         }
 
-        private LevelChunk tryLoadingChunk(long chunkPos) {
+        private StructureLevelChunk tryLoadingChunk(long chunkPos) {
             ChunkPos pos = new ChunkPos(chunkPos);
             try {
                 CompoundTag data = chunkStorage.read(pos);
                 if (data == null) {
-                    return new LevelChunk(level, pos);
+                    return new StructureLevelChunk(level, pos);
                 }
                 return ChunkLoader.loadChunk(level, pos, data);
             } catch (IOException e) {
                 JourneyMod.LOGGER.error("Error loading chunk of structure {}", level.getStructureId());
-                return new LevelChunk(level, pos);
+                return new StructureLevelChunk(level, pos);
             }
         }
 
@@ -217,7 +229,7 @@ public class StructureChunkSource extends ChunkSource {
         }
 
         @Override
-        public Long2ObjectOpenHashMap<LevelChunk> getLoadedChunks() {
+        public Long2ObjectOpenHashMap<StructureLevelChunk> getLoadedChunks() {
             return loadedChunks;
         }
 

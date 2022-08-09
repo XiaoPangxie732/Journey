@@ -60,14 +60,14 @@ public class ControllerBlockEntity extends BlockEntity {
 
         StructureEntity entity = EntityRegistry.STRUCTURE.create(level);
         entity.moveTo(
-                start.getX() + size.getX() / 2d,
-                start.getY() + size.getY() / 2d,
-                start.getZ() + size.getZ() / 2d,
+                worldPosition.getX() + start.getX() + size.getX() / 2d,
+                worldPosition.getY() + start.getY(),
+                worldPosition.getZ() + start.getZ() + size.getZ() / 2d,
                 0, 0
         );
         entity.setStructureId(structureId);
         entity.createStructureLevel(level, start, size, worldPosition, BlockPos.betweenClosed(start.getX(), start.getY(), start.getZ(),
-                start.getX() + size.getX(), start.getY() + size.getY(), start.getZ() + size.getZ()));
+                start.getX() + size.getX() - 1, start.getY() + size.getY() - 1, start.getZ() + size.getZ() - 1));
         level.addFreshEntity(entity);
     }
 

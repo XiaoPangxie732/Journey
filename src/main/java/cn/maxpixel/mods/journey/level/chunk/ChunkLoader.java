@@ -34,7 +34,7 @@ import static net.minecraft.world.level.chunk.storage.ChunkSerializer.BLOCK_STAT
 import static net.minecraft.world.level.chunk.storage.ChunkSerializer.makeBiomeCodec;
 
 public class ChunkLoader {
-    public static LevelChunk loadChunk(StructureLevel level, ChunkPos pos, CompoundTag tag) {
+    public static StructureLevelChunk loadChunk(StructureLevel level, ChunkPos pos, CompoundTag tag) {
         if (ChunkSerializer.getChunkTypeFromTag(tag) != ChunkStatus.ChunkType.LEVELCHUNK) {
             throw new UnsupportedOperationException();
         }
@@ -100,7 +100,7 @@ public class ChunkLoader {
         } else {
             blendingData = null;
         }
-        LevelChunk chunk = new LevelChunk(level, pos, upgradeData, blockTicks, fluidTicks, tag.getLong("InhabitedTime"),
+        StructureLevelChunk chunk = new StructureLevelChunk(level, pos, upgradeData, blockTicks, fluidTicks, tag.getLong("InhabitedTime"),
                 sections, null, blendingData);// TODO: Post load
         chunk.setLightCorrect(lightOn);
 
@@ -131,7 +131,7 @@ public class ChunkLoader {
         return chunk;
     }
 
-    public static CompoundTag saveChunk(StructureLevel level, LevelChunk chunk) {
+    public static CompoundTag saveChunk(StructureLevel level, StructureLevelChunk chunk) {
         ChunkPos chunkPos = chunk.getPos();
         long gameTime = level.getGameTime();
         CompoundTag tag = new CompoundTag();

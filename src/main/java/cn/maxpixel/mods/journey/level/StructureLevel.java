@@ -31,6 +31,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.scores.Scoreboard;
@@ -98,9 +99,10 @@ public class StructureLevel extends Level {
         this.entity = entity;
         this.box = new BoundingBox(
                 start.getX(), start.getY(), start.getZ(),
-                start.getX() + size.getX(), start.getY() + size.getY(), start.getZ() + size.getZ()
+                start.getX() + size.getX() - 1, start.getY() + size.getY() - 1, start.getZ() + size.getZ() - 1
         );
         this.chunkSource = new StructureChunkSource(this);
+        chunkSource.loadChunks();
         if (!isClientSide) { // TODO: Tick check
             blockTicks = new LevelTicks<>((chunkPos) -> true, getProfilerSupplier());
             fluidTicks = new LevelTicks<>((chunkPos) -> true, getProfilerSupplier());
@@ -165,7 +167,7 @@ public class StructureLevel extends Level {
         BlockState originalState = parent.getBlockState(levelPos);
         BlockEntity originalBlockEntity = parent.getBlockEntity(levelPos);
 
-        if (originalState != Blocks.AIR.defaultBlockState()) {
+        if (originalState.getMaterial() != Material.AIR) {
             setBlock(relativePos, originalState, BlockChangeFlags.SEND_TO_CLIENT);
             if (originalBlockEntity != null) {
                 CompoundTag data = originalBlockEntity.saveWithoutMetadata();
@@ -225,6 +227,8 @@ public class StructureLevel extends Level {
         } else {
             profiler.push("task executor");
             EXECUTOR.tick();
+            profiler.popPush("chunks");
+            chunkSource.tick(() -> true, true);
             profiler.popPush("block entities");
             tickBlockEntities();
             profiler.pop();
@@ -406,10 +410,18 @@ public class StructureLevel extends Level {
     }
 
     @Override
+    public Holder<Biome> getNoiseBiome(int pX, int pY, int pZ) {
+        int x = entity.getPosXInParent(pX);
+        int y = entity.getPosYInParent(pY);
+        int z = entity.getPosZInParent(pZ);
+        return parent.getNoiseBiome(x, y, z);
+    }
+
+    @Override
     public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
-        int x = entity.getBlockX() + pX;
-        int y = entity.getBlockY() + pY;
-        int z = entity.getBlockZ() + pZ;
+        int x = entity.getPosXInParent(pX);
+        int y = entity.getPosYInParent(pY);
+        int z = entity.getPosZInParent(pZ);
         return parent.getUncachedNoiseBiome(x, y, z);
     }
 

@@ -18,6 +18,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import net.minecraftforge.network.NetworkHooks;
 
@@ -29,10 +30,13 @@ import static cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity.*;
 public class StructureEntity extends Entity implements IEntityAdditionalSpawnData {
     public static final String NAME = "structure";
     private static final String INITIALIZED_KEY = "Initialized";
+    private static final String ORIGIN_POS_KEY = "OriginPosition";
 
     private UUID structureId;
     private boolean initialized;
     private StructureLevel structureLevel;
+    private BlockPos originPos;
+    private Vec3 originRelative;
 
     public StructureEntity(EntityType<StructureEntity> type, Level level) {
         super(type, level);
@@ -45,6 +49,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     @CalledOn(CalledOn.Side.SERVER)
     public void createStructureLevel(Level parent, BlockPos start, Vec3i size, BlockPos controllerPos, Iterable<BlockPos> blocks) {
         this.structureLevel = new StructureLevel(parent, start, size, this);
+        this.originPos = controllerPos;
         structureLevel.moveBlocks(blocks, controllerPos);
         this.initialized = true;
     }
@@ -68,17 +73,33 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
         return structureId;
     }
 
+    public Vec3 getOriginRelative() {
+        return originRelative == null ? Vec3.ZERO : originRelative;
+    }
+
     @CalledOn(CalledOn.Side.CLIENT)
     public void updateClientChunks(ClientboundLevelChunkPacketData chunkData, int chunkX, int chunkZ) {
         structureLevel.updateClientChunks(chunkData, chunkX, chunkZ);
     }
 
-    @Override
-    public void kill() {
+    public int getPosXInParent(int x) {
+        return originPos.getX() + x;
+    }
+
+    public int getPosYInParent(int y) {
+        return originPos.getY() + y;
+    }
+
+    public int getPosZInParent(int z) {
+        return originPos.getZ() + z;
+    }
+
+    public BlockPos getPosInParent(BlockPos pos) {
+        return originPos.offset(pos);
     }
 
     @Override
-    public void remove(RemovalReason pReason) {
+    public void remove(RemovalReason pReason) {// TODO: Delete structure file when killed
         super.remove(pReason);
         structureLevel.close();
     }
@@ -92,6 +113,9 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     @Override
     public void tick() {
         super.tick();
+        Vec3 delta = position().subtract(xOld, yOld, zOld);
+        originPos.offset(delta.x, delta.y, delta.z);
+        originRelative = position().subtract(originPos.getX(), originPos.getY(), originPos.getZ());
         structureLevel.tick();
     }
 
@@ -124,7 +148,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     }
 
     @Override
-    public boolean isPickable() {
+    public boolean isAttackable() {
         return false;
     }
 
@@ -136,6 +160,8 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
                 setStructureId(tag.getUUID(STRUCTURE_ID_KEY));
                 int[] startPos = tag.getIntArray(START_KEY);
                 int[] size = tag.getIntArray(SIZE_KEY);
+                int[] originPos = tag.getIntArray(ORIGIN_POS_KEY);
+                this.originPos = new BlockPos(originPos[0], originPos[1], originPos[2]);
                 this.structureLevel = new StructureLevel(level, new BlockPos(startPos[0], startPos[1], startPos[2]),
                         new Vec3i(size[0], size[1], size[2]), this);
             }
@@ -151,6 +177,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
             Vec3i size = structureLevel.size;
             tag.putIntArray(START_KEY, new int[] {start.getX(), start.getY(), start.getZ()});
             tag.putIntArray(SIZE_KEY, new int[] {size.getX(), size.getY(), size.getZ()});
+            tag.putIntArray(ORIGIN_POS_KEY, new int[] {originPos.getX(), originPos.getY(), originPos.getZ()});
         }
     }
 
@@ -158,7 +185,8 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     public void writeSpawnData(FriendlyByteBuf buffer) {
         if (initialized) {
             buffer.writeBoolean(true);
-            buffer.writeBlockPos(structureLevel.start)
+            buffer.writeBlockPos(originPos)
+                    .writeBlockPos(structureLevel.start)
                     .writeVarInt(structureLevel.size.getX())
                     .writeVarInt(structureLevel.size.getY())
                     .writeVarInt(structureLevel.size.getZ());
@@ -169,6 +197,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     @Override
     public void readSpawnData(FriendlyByteBuf additionalData) {
         if (additionalData.readBoolean()) {
+            this.originPos = additionalData.readBlockPos();
             structureLevel = new StructureLevel(level, additionalData.readBlockPos(), new Vec3i(additionalData.readVarInt(),
                     additionalData.readVarInt(), additionalData.readVarInt()), this);
             structureLevel.getChunkSource().readChunks(additionalData);

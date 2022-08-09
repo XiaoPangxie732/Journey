@@ -1,12 +1,12 @@
 package cn.maxpixel.mods.journey.network.clientbound;
 
 import cn.maxpixel.mods.journey.entity.StructureEntity;
+import cn.maxpixel.mods.journey.level.chunk.StructureLevelChunk;
 import cn.maxpixel.mods.journey.network.NetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -19,7 +19,7 @@ public class ClientboundChunkUpdatePacket {
     private final ClientboundLevelChunkPacketData chunkData;
 //    private final ClientboundLightUpdatePacketData lightData;TODO
 
-    public ClientboundChunkUpdatePacket(int entityId, int chunkX, int chunkZ, LevelChunk chunk) {
+    public ClientboundChunkUpdatePacket(int entityId, int chunkX, int chunkZ, StructureLevelChunk chunk) {
         this.entityId = entityId;
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
@@ -33,7 +33,7 @@ public class ClientboundChunkUpdatePacket {
         this.chunkData = new ClientboundLevelChunkPacketData(buf, chunkX, chunkZ);
     }
 
-    public static void send(StructureEntity entity, int chunkX, int chunkZ, LevelChunk chunk) {
+    public static void send(StructureEntity entity, int chunkX, int chunkZ, StructureLevelChunk chunk) {
         NetworkManager.CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity),
                 new ClientboundChunkUpdatePacket(entity.getId(), chunkX, chunkZ, chunk));
     }
