@@ -11,12 +11,15 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
@@ -52,6 +55,7 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
     public void render(StructureEntity entity, float yaw, float partialTick, PoseStack stack, MultiBufferSource buffer, int packedLight) {// TODO: culling, optimization, etc.
         StructureLevel structureLevel = entity.getStructureLevel();
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+        BlockEntityRenderDispatcher blockEntityRenderDispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
         stack.pushPose();
         Vec3 relative = entity.getOriginRelative();
         stack.translate(-relative.x, -relative.y, -relative.z);
@@ -63,8 +67,15 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
             for (RenderType chunkBufferLayer : CHUNK_BUFFER_LAYERS) {
                 ForgeHooksClient.setRenderType(chunkBufferLayer);
                 if (!fluid.isEmpty() && ItemBlockRenderTypes.canRenderInLayer(fluid, chunkBufferLayer)) {
+                    stack.pushPose();
+                    stack.translate(
+                            -SectionPos.sectionRelative(pos.getX()),
+                            -SectionPos.sectionRelative(pos.getY()),
+                            -SectionPos.sectionRelative(pos.getZ())
+                    );
                     blockRenderer.renderLiquid(pos, structureLevel, new TransformingVertexConsumer(
                             buffer.getBuffer(chunkBufferLayer), stack.last()), state, fluid);
+                    stack.popPose();
                 }
                 if (state.getRenderShape() != RenderShape.INVISIBLE && ItemBlockRenderTypes.canRenderInLayer(state, chunkBufferLayer)) {
                     blockRenderer.renderBatched(
@@ -74,12 +85,12 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
                 }
             }
             ForgeHooksClient.setRenderType(null);
-//            if (state.hasBlockEntity()) {
-//                BlockEntity blockEntity = structureLevel.getBlockEntity(pos);
-//                if (blockEntity != null) {
-//
-//                }
-//            }
+            if (state.hasBlockEntity()) {
+                BlockEntity blockEntity = structureLevel.getBlockEntity(pos);
+                if (blockEntity != null) {
+                    blockEntityRenderDispatcher.render(blockEntity, partialTick, stack, buffer);
+                }
+            }
             stack.popPose();
         }
         stack.popPose();
@@ -189,15 +200,7 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
 //        }
 //    }
 
-    public static class TransformingVertexConsumer implements VertexConsumer {
-        private final VertexConsumer parent;
-        private final PoseStack.Pose pose;
-
-        public TransformingVertexConsumer(VertexConsumer parent, PoseStack.Pose pose) {
-            this.parent = parent;
-            this.pose = pose;
-        }
-
+    private record TransformingVertexConsumer(VertexConsumer parent, PoseStack.Pose pose) implements VertexConsumer {
         @Override
         public TransformingVertexConsumer vertex(double x, double y, double z) {
             Vector4f vector = new Vector4f((float) x, (float) y, (float) z, 1);
