@@ -17,6 +17,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
@@ -37,6 +38,8 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     private StructureLevel structureLevel;
     private BlockPos originPos;
     private Vec3 originRelative;
+    private BlockPos oldBlockPosition;
+    private EntityDimensions dimensions;
 
     public StructureEntity(EntityType<StructureEntity> type, Level level) {
         super(type, level);
@@ -50,6 +53,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     public void createStructureLevel(Level parent, BlockPos start, Vec3i size, BlockPos controllerPos, Iterable<BlockPos> blocks) {
         this.structureLevel = new StructureLevel(parent, start, size, this);
         this.originPos = controllerPos;
+        reapplyPosition();
         structureLevel.moveBlocks(blocks, controllerPos);
         this.initialized = true;
     }
@@ -98,6 +102,10 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
         return originPos.offset(pos);
     }
 
+    public BlockPos getOriginPos() {
+        return originPos;
+    }
+
     @Override
     public void remove(RemovalReason pReason) {// TODO: Delete structure file when killed
         super.remove(pReason);
@@ -110,13 +118,33 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
                 structureLevel.size.getY());
     }
 
+
+    @Override
+    protected AABB makeBoundingBox() {
+        if (structureLevel != null) {
+            return new AABB(structureLevel.start, structureLevel.start.offset(structureLevel.size))
+                    .move(originPos);
+        } else return super.makeBoundingBox();
+    }
+
     @Override
     public void tick() {
+        level.getProfiler().push("calculateOrigin");
+        BlockPos blockPos = blockPosition();
+        if (firstTick) {
+            this.oldBlockPosition = blockPos;
+            originRelative = position().subtract(originPos.getX(), originPos.getY(), originPos.getZ()).reverse();
+        }
+        if (!blockPos.equals(oldBlockPosition)) {
+            originPos.offset(blockPos.subtract(oldBlockPosition));
+            originRelative = position().subtract(originPos.getX(), originPos.getY(), originPos.getZ()).reverse();
+            this.oldBlockPosition = blockPos;
+        }
+        level.getProfiler().pop();
         super.tick();
-        Vec3 delta = position().subtract(xOld, yOld, zOld);
-        originPos.offset(delta.x, delta.y, delta.z);
-        originRelative = position().subtract(originPos.getX(), originPos.getY(), originPos.getZ());
+        level.getProfiler().push("levelTick");
         structureLevel.tick();
+        level.getProfiler().pop();
     }
 
     @Override
@@ -140,6 +168,12 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     @Override
     protected boolean canRide(Entity pVehicle) {
         return false;
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+//        return false;
+        return !isRemoved();
     }
 
     @Override

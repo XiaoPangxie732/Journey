@@ -41,12 +41,12 @@ import net.minecraft.world.ticks.LevelTicks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class StructureLevel extends Level {
     private static final LevelEntityGetter<Entity> EMPTY_ENTITY_GETTER = new LevelEntityGetter<>() {
@@ -82,7 +82,7 @@ public class StructureLevel extends Level {
     private static final int MAX_BLOCKS_MOVED_PER_TICK = 4096;
 
     private final OnTickExecutor EXECUTOR = new OnTickExecutor();
-    private final Level parent;
+    public final Level parent;
     public final BlockPos start;
     public final Vec3i size;
     private final StructureEntity entity;
@@ -102,7 +102,6 @@ public class StructureLevel extends Level {
                 start.getX() + size.getX() - 1, start.getY() + size.getY() - 1, start.getZ() + size.getZ() - 1
         );
         this.chunkSource = new StructureChunkSource(this);
-        chunkSource.loadChunks();
         if (!isClientSide) { // TODO: Tick check
             blockTicks = new LevelTicks<>((chunkPos) -> true, getProfilerSupplier());
             fluidTicks = new LevelTicks<>((chunkPos) -> true, getProfilerSupplier());
@@ -110,6 +109,7 @@ public class StructureLevel extends Level {
             blockTicks = null;
             fluidTicks = null;
         }
+        chunkSource.loadChunks();
         getWorldBorder().setSize(Math.max(size.getX(), Math.max(size.getY(), size.getZ())) / 2d);
     }
 
@@ -128,10 +128,6 @@ public class StructureLevel extends Level {
         }
 
         BoundingBox boundingBox = box.moved(controllerPos.getX(), controllerPos.getY(), controllerPos.getZ());
-//        List<ScheduledTick<Block>> list = new ArrayList<>();FIXME
-//        Predicate<ScheduledTick<Block>> predicate = (scheduledTick) -> boundingBox.isInside(scheduledTick.pos());
-//        blockTicks.alreadyRunThisTick.stream().filter(predicate).forEach(list::add);
-//        blockTicks.toRunThisTick.stream().filter(predicate).forEach(list::add);
         ((LevelTicks<Block>) parent.getBlockTicks()).clearArea(boundingBox);
         ((LevelTicks<Fluid>) parent.getFluidTicks()).clearArea(boundingBox);
 
@@ -168,7 +164,7 @@ public class StructureLevel extends Level {
         BlockEntity originalBlockEntity = parent.getBlockEntity(levelPos);
 
         if (originalState.getMaterial() != Material.AIR) {
-            setBlock(relativePos, originalState, BlockChangeFlags.SEND_TO_CLIENT);
+            setBlock(relativePos, originalState, BlockChangeFlags.SEND_TO_CLIENT + BlockChangeFlags.DONT_UPDATE_NEIGHBOR_SHAPES);
             if (originalBlockEntity != null) {
                 CompoundTag data = originalBlockEntity.saveWithoutMetadata();
                 Clearable.tryClear(originalBlockEntity);
@@ -178,7 +174,7 @@ public class StructureLevel extends Level {
                     newBlockEntity.setChanged();
                 }
             }
-            parent.setBlock(levelPos, Blocks.BARRIER.defaultBlockState(), BlockChangeFlags.SEND_TO_CLIENT);
+            parent.setBlock(levelPos, Blocks.BARRIER.defaultBlockState(), BlockChangeFlags.SEND_TO_CLIENT + BlockChangeFlags.DONT_UPDATE_NEIGHBOR_SHAPES);
         }
     }
 
@@ -201,7 +197,8 @@ public class StructureLevel extends Level {
     @CalledOn(CalledOn.Side.SERVER)
     private void doneMoveBlocks(BlockPos relativePos, BlockPos levelPos) {
         parent.setBlockAndUpdate(levelPos, Blocks.AIR.defaultBlockState());
-        blockUpdated(levelPos, getBlockState(relativePos).getBlock());
+        BlockState state = getBlockState(relativePos);
+        markAndNotifyBlock(relativePos, getChunkAt(relativePos), state, state, BlockChangeFlags.DO_UPDATE, 512);
     }
 
     public @Nullable UUID getStructureId() {
@@ -264,10 +261,8 @@ public class StructureLevel extends Level {
     }
 
     @Override
-    public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) { // TODO
-//        if (!isClientSide) {
-//            getChunkSource().blockChanged(pPos);
-//        }
+    public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) { // FIXME: better ways
+        this.getChunkAt(pPos).setUnsaved(true);
     }
 
     @Override
@@ -311,7 +306,7 @@ public class StructureLevel extends Level {
     @Nullable
     @Override
     public Entity getEntity(int pId) {
-        return null;
+        return parent.getEntity(pId);
     }
 
     @Nullable
@@ -406,22 +401,43 @@ public class StructureLevel extends Level {
 
     @Override
     public List<? extends Player> players() {
-        return Collections.emptyList();
+        return parent.players();
     }
 
     @Override
-    public Holder<Biome> getNoiseBiome(int pX, int pY, int pZ) {
-        int x = entity.getPosXInParent(pX);
-        int y = entity.getPosYInParent(pY);
-        int z = entity.getPosZInParent(pZ);
+    public List<Entity> getEntities(@Nullable Entity pEntity, AABB pBoundingBox, Predicate<? super Entity> pPredicate) {
+        if (pEntity == null || pEntity.level == this) {
+            pBoundingBox.move(entity.getOriginPos());
+        }
+        return parent.getEntities(pEntity, pBoundingBox, pPredicate);
+    }
+
+    @Override
+    public <T extends Entity> List<T> getEntities(EntityTypeTest<Entity, T> pEntityTypeTest, AABB pArea, Predicate<? super T> pPredicate) {
+        return parent.getEntities(pEntityTypeTest, pArea, pPredicate);
+    }
+
+    @Override
+    public boolean addFreshEntity(Entity entity) {// FIXME: Is this correct?
+        BlockPos origin = this.entity.getOriginPos();
+        entity.setPos(entity.position().add(origin.getX(), origin.getY(), origin.getZ()));
+        entity.level = parent;
+        return parent.addFreshEntity(entity);
+    }
+
+    @Override
+    public Holder<Biome> getNoiseBiome(int quartX, int quartY, int quartZ) {
+        int x = QuartPos.fromBlock(entity.getPosXInParent(QuartPos.toBlock(quartX)));
+        int y = QuartPos.fromBlock(entity.getPosYInParent(QuartPos.toBlock(quartY)));
+        int z = QuartPos.fromBlock(entity.getPosZInParent(QuartPos.toBlock(quartZ)));
         return parent.getNoiseBiome(x, y, z);
     }
 
     @Override
-    public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
-        int x = entity.getPosXInParent(pX);
-        int y = entity.getPosYInParent(pY);
-        int z = entity.getPosZInParent(pZ);
+    public Holder<Biome> getUncachedNoiseBiome(int quartX, int quartY, int quartZ) {
+        int x = QuartPos.fromBlock(entity.getPosXInParent(QuartPos.toBlock(quartX)));
+        int y = QuartPos.fromBlock(entity.getPosYInParent(QuartPos.toBlock(quartY)));
+        int z = QuartPos.fromBlock(entity.getPosZInParent(QuartPos.toBlock(quartZ)));
         return parent.getUncachedNoiseBiome(x, y, z);
     }
 

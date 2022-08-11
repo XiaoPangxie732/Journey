@@ -58,7 +58,7 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
         BlockEntityRenderDispatcher blockEntityRenderDispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
         stack.pushPose();
         Vec3 relative = entity.getOriginRelative();
-        stack.translate(-relative.x, -relative.y, -relative.z);
+        stack.translate(relative.x, relative.y, relative.z);
         for (BlockPos pos : BlockPos.betweenClosed(structureLevel.start, structureLevel.start.offset(structureLevel.size))) {
             stack.pushPose();
             stack.translate(pos.getX(), pos.getY(), pos.getZ());

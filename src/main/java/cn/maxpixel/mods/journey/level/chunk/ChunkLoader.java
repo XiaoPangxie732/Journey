@@ -17,6 +17,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
@@ -125,6 +126,21 @@ public class ChunkLoader {
             ListTag postProcess = postProcessingData.getList(j);
             for(int k = 0; k < postProcess.size(); ++k) {
                 chunk.addPackedPostProcess(postProcess.getShort(k), j);
+            }
+        }
+
+        ListTag blockEntitiesData = tag.getList("block_entities", Tag.TAG_COMPOUND);
+        for (int i = 0; i < blockEntitiesData.size(); i++) {
+            CompoundTag data = blockEntitiesData.getCompound(i);
+            boolean keepPacked = data.getBoolean("keepPacked");
+            if (keepPacked) {
+                chunk.setBlockEntityNbt(data);
+            } else {
+                BlockPos blockEntityPos = BlockEntity.getPosFromTag(data);
+                BlockEntity blockEntity = BlockEntity.loadStatic(blockEntityPos, chunk.getBlockState(blockEntityPos), data);
+                if (blockEntity != null) {
+                    chunk.setBlockEntity(blockEntity);
+                }
             }
         }
 

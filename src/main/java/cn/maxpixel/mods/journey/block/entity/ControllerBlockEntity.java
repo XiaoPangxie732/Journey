@@ -66,6 +66,8 @@ public class ControllerBlockEntity extends BlockEntity {
                 0, 0
         );
         entity.setStructureId(structureId);
+        this.building = false;
+        setChanged();
         entity.createStructureLevel(level, start, size, worldPosition, BlockPos.betweenClosed(start.getX(), start.getY(), start.getZ(),
                 start.getX() + size.getX() - 1, start.getY() + size.getY() - 1, start.getZ() + size.getZ() - 1));
         level.addFreshEntity(entity);

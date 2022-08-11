@@ -6,23 +6,27 @@ import cn.maxpixel.mods.journey.level.LevelResources;
 import cn.maxpixel.mods.journey.level.StructureLevel;
 import cn.maxpixel.mods.journey.network.clientbound.ClientboundChunkUpdatePacket;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
+import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.ticks.LevelChunkTicks;
+import net.minecraft.world.ticks.LevelTicks;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -53,6 +57,11 @@ public class StructureChunkSource extends ChunkSource {
     }
 
     @Override
+    public boolean hasChunk(int chunkX, int chunkZ) {
+        return storage.getLoadedChunks().containsKey(ChunkPos.asLong(chunkX, chunkZ));
+    }
+
+    @Override
     public void tick(BooleanSupplier hasTimeLeft, boolean tickChunks) { // TODO: More things
         if (tickChunks) {
             storage.tick();
@@ -67,10 +76,6 @@ public class StructureChunkSource extends ChunkSource {
     @Override
     public int getLoadedChunksCount() {
         return storage.getLoadedChunks().size();
-    }
-
-    public ObjectCollection<StructureLevelChunk> getLoadedChunks() {
-        return storage.getLoadedChunks().values();
     }
 
     @Override
@@ -212,7 +217,14 @@ public class StructureChunkSource extends ChunkSource {
                 if (data == null) {
                     return new StructureLevelChunk(level, pos);
                 }
-                return ChunkLoader.loadChunk(level, pos, data);
+                StructureLevelChunk chunk = ChunkLoader.loadChunk(level, pos, data);
+                chunk.setLoaded(true);
+                chunk.setFullStatus(() -> ChunkHolder.FullChunkStatus.TICKING);
+                chunk.registerAllBlockEntitiesAfterLevelLoad();
+                ((LevelTicks<Block>) level.getBlockTicks()).addContainer(chunk.getPos(), (LevelChunkTicks<Block>) chunk.getBlockTicks());
+                ((LevelTicks<Fluid>) level.getFluidTicks()).addContainer(chunk.getPos(), (LevelChunkTicks<Fluid>) chunk.getFluidTicks());
+                chunk.unpackTicks(level.getGameTime());
+                return chunk;
             } catch (IOException e) {
                 JourneyMod.LOGGER.error("Error loading chunk of structure {}", level.getStructureId());
                 return new StructureLevelChunk(level, pos);
