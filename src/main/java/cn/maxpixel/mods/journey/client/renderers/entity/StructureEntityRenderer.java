@@ -6,18 +6,25 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -88,7 +95,25 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
             if (state.hasBlockEntity()) {
                 BlockEntity blockEntity = structureLevel.getBlockEntity(pos);
                 if (blockEntity != null) {
-                    blockEntityRenderDispatcher.render(blockEntity, partialTick, stack, buffer);
+                    BlockEntityRenderer<BlockEntity> renderer = blockEntityRenderDispatcher.getRenderer(blockEntity);
+                    if (renderer != null && blockEntity.hasLevel() && blockEntity.getType().isValid(blockEntity.getBlockState()) &&
+                            renderer.shouldRender(blockEntity, blockEntityRenderDispatcher.camera.getPosition().subtract(entity.getOriginPos()))) {
+                        try {
+                            Level l = blockEntity.getLevel();
+                            int lightColor;
+                            if (l != null) {
+                                lightColor = LevelRenderer.getLightColor(l, blockEntity.getBlockPos());
+                            } else {
+                                lightColor = 15728880;
+                            }
+                            renderer.render(blockEntity, partialTick, stack, buffer, lightColor, OverlayTexture.NO_OVERLAY);
+                        } catch (Throwable throwable) {
+                            CrashReport crashreport = CrashReport.forThrowable(throwable, "Rendering Block Entity");
+                            CrashReportCategory crashreportcategory = crashreport.addCategory("Block Entity Details");
+                            blockEntity.fillCrashReportCategory(crashreportcategory);
+                            throw new ReportedException(crashreport);
+                        }
+                    }
                 }
             }
             stack.popPose();

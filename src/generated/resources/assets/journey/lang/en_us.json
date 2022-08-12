@@ -1,6 +1,7 @@
 {
   "block.journey.controller": "Structure Controller",
   "block.journey.copper_wire": "Copper Wire",
+  "block.journey.creative_engine": "Creative Engine",
   "item.journey.marker": "Marker",
   "itemGroup.journey.main": "Journey",
   "itemGroup.journey.memes": "Journey | Memes",

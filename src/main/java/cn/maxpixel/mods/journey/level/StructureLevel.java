@@ -6,6 +6,7 @@ import cn.maxpixel.mods.journey.level.chunk.StructureChunkSource;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectIterators;
 import net.minecraft.core.*;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
@@ -34,6 +35,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
@@ -110,7 +112,7 @@ public class StructureLevel extends Level {
             fluidTicks = null;
         }
         chunkSource.loadChunks();
-        getWorldBorder().setSize(Math.max(size.getX(), Math.max(size.getY(), size.getZ())) / 2d);
+        getWorldBorder().setSize(Math.max(size.getX(), size.getZ()));
     }
 
     @CalledOn(CalledOn.Side.SERVER)
@@ -220,16 +222,15 @@ public class StructureLevel extends Level {
 
     public void tick() {
         ProfilerFiller profiler = getProfiler();
-        if (isClientSide) {
-        } else {
-            profiler.push("task executor");
-            EXECUTOR.tick();
-            profiler.popPush("chunks");
-            chunkSource.tick(() -> true, true);
-            profiler.popPush("block entities");
-            tickBlockEntities();
-            profiler.pop();
-        }
+        profiler.push("task executor");
+        EXECUTOR.tick();
+        profiler.popPush("world border");
+        getWorldBorder().setCenter(-entity.getOriginRelative().x, -entity.getOriginRelative().z);
+        profiler.popPush("chunks");
+        chunkSource.tick(() -> true, true);
+        profiler.popPush("block entities");
+        tickBlockEntities();
+        profiler.pop();
     }
 
     @Override
@@ -419,10 +420,33 @@ public class StructureLevel extends Level {
 
     @Override
     public boolean addFreshEntity(Entity entity) {// FIXME: Is this correct?
-        BlockPos origin = this.entity.getOriginPos();
-        entity.setPos(entity.position().add(origin.getX(), origin.getY(), origin.getZ()));
+        entity.setPos(entity.position().add(this.entity.getOriginPos()));
         entity.level = parent;
         return parent.addFreshEntity(entity);
+    }
+
+    @Override
+    public void addParticle(ParticleOptions pParticleData, double pX, double pY, double pZ, double pXSpeed, double pYSpeed, double pZSpeed) {
+        Vec3 origin = entity.getOriginPos();
+        parent.addParticle(pParticleData, pX + origin.x, pY + origin.y, pZ + origin.z, pXSpeed, pYSpeed, pZSpeed);
+    }
+
+    @Override
+    public void addParticle(ParticleOptions pParticleData, boolean pForceAlwaysRender, double pX, double pY, double pZ, double pXSpeed, double pYSpeed, double pZSpeed) {
+        Vec3 origin = entity.getOriginPos();
+        parent.addParticle(pParticleData, pForceAlwaysRender, pX + origin.x, pY + origin.y, pZ + origin.z, pXSpeed, pYSpeed, pZSpeed);
+    }
+
+    @Override
+    public void addAlwaysVisibleParticle(ParticleOptions pParticleData, double pX, double pY, double pZ, double pXSpeed, double pYSpeed, double pZSpeed) {
+        Vec3 origin = entity.getOriginPos();
+        parent.addAlwaysVisibleParticle(pParticleData, pX + origin.x, pY + origin.y, pZ + origin.z, pXSpeed, pYSpeed, pZSpeed);
+    }
+
+    @Override
+    public void addAlwaysVisibleParticle(ParticleOptions pParticleData, boolean pIgnoreRange, double pX, double pY, double pZ, double pXSpeed, double pYSpeed, double pZSpeed) {
+        Vec3 origin = entity.getOriginPos();
+        parent.addAlwaysVisibleParticle(pParticleData, pIgnoreRange, pX + origin.x, pY + origin.y, pZ + origin.z, pXSpeed, pYSpeed, pZSpeed);
     }
 
     @Override

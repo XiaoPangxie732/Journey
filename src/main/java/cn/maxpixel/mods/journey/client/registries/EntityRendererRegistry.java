@@ -4,6 +4,7 @@ import cn.maxpixel.mods.journey.JourneyMod;
 import cn.maxpixel.mods.journey.client.renderers.entity.StructureEntityRenderer;
 import cn.maxpixel.mods.journey.client.renderers.entity.block.ControllerBlockEntityRenderer;
 import cn.maxpixel.mods.journey.client.renderers.entity.block.CopperWireBlockEntityRenderer;
+import cn.maxpixel.mods.journey.client.renderers.entity.block.CreativeEngineBlockEntityRenderer;
 import cn.maxpixel.mods.journey.registries.BlockEntityRegistry;
 import cn.maxpixel.mods.journey.registries.EntityRegistry;
 import net.minecraftforge.api.distmarker.Dist;
@@ -19,5 +20,6 @@ public class EntityRendererRegistry {
 
         register.registerBlockEntityRenderer(BlockEntityRegistry.CONTROLLER, ControllerBlockEntityRenderer::new);
         register.registerBlockEntityRenderer(BlockEntityRegistry.COPPER_WIRE, CopperWireBlockEntityRenderer::new);
+        register.registerBlockEntityRenderer(BlockEntityRegistry.CREATIVE_ENGINE, CreativeEngineBlockEntityRenderer::new);
     }
 }

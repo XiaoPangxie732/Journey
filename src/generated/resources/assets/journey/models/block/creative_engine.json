@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "journey:block/creative_engine",
+    "bottom": "journey:block/creative_engine_bottom",
+    "top": "journey:block/creative_engine"
+  }
+}

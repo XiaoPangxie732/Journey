@@ -20,6 +20,7 @@ public class EnglishLanguageProvider extends LanguageProvider {
         // Block
         addControllerBlockTranslations();
         add(BlockRegistry.COPPER_WIRE, "Copper Wire");
+        add(BlockRegistry.CREATIVE_ENGINE, "Creative Engine");
 
         // Item
         addMarkerTranslations();

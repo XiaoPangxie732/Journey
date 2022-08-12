@@ -10,7 +10,7 @@ public class EntityRegistry {
             EntityType.Builder.of(StructureEntity::new, MobCategory.MISC)
                     .fireImmune()
                     .clientTrackingRange(10)
-                    .updateInterval(1200)
+                    .updateInterval(20)
                     .noSummon()
     );
 

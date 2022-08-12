@@ -2,6 +2,7 @@ package cn.maxpixel.mods.journey.registries;
 
 import cn.maxpixel.mods.journey.block.ControllerBlock;
 import cn.maxpixel.mods.journey.block.CopperWireBlock;
+import cn.maxpixel.mods.journey.block.CreativeEngineBlock;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -34,6 +35,14 @@ public class BlockRegistry {
                             .isRedstoneConductor((state, getter, pos) -> false)
                             .noOcclusion()
             ), new Item.Properties().tab(CreativeModeTab.TAB_REDSTONE)
+    );
+
+    public static final CreativeEngineBlock CREATIVE_ENGINE = registerWithItem(
+            CreativeEngineBlock.NAME,
+            new CreativeEngineBlock(
+                    BlockBehaviour.Properties.of(Material.METAL)
+                            .strength(2.f)
+            ), new Item.Properties().tab(Tabs.MAIN)
     );
 
     /**

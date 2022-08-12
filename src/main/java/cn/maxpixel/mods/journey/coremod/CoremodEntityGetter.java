@@ -14,6 +14,7 @@ import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -26,7 +27,7 @@ public class CoremodEntityGetter {
                                                        ImmutableList.Builder<VoxelShape> builder, Entity entity) {
         if (entity instanceof StructureEntity structureEntity) {
             builder.addAll(new BlockCollisions(structureEntity.getStructureLevel(), getterEntity, box.move(
-                    structureEntity.getOriginPos().multiply(-1)), structureEntity.getOriginPos()));// FIXME: optimize
+                    structureEntity.getOriginPos().reverse()), structureEntity.getOriginPos()));
             return true;
         }
         return false;
@@ -42,9 +43,9 @@ public class CoremodEntityGetter {
         @Nullable
         private BlockGetter cachedBlockGetter;
         private long cachedBlockGetterPos;
-        private final BlockPos originPos;
+        private final Vec3 originPos;
 
-        public BlockCollisions(CollisionGetter collisionGetter, @Nullable Entity entity, AABB box, BlockPos originPos) {
+        public BlockCollisions(CollisionGetter collisionGetter, @Nullable Entity entity, AABB box, Vec3 originPos) {
             this.context = entity == null ? CollisionContext.empty() : CollisionContext.of(entity);
             this.originPos = originPos;
             this.pos = new BlockPos.MutableBlockPos();
@@ -100,22 +101,22 @@ public class CoremodEntityGetter {
 
                     VoxelShape collisionShape = state.getCollisionShape(collisionGetter, pos, context);
                     if (collisionShape == Shapes.block()) {
-                        if (!this.box.intersects(x, y, z, (double)x + 1.0D, (double)y + 1.0D, (double)z + 1.0D)) {
+                        if (!box.intersects(x, y, z, x + 1, y + 1, z + 1)) {
                             continue;
                         }
 
-                        return collisionShape.move(x + originPos.getX(), y + originPos.getY(), z + originPos.getZ());
+                        return collisionShape.move(x + originPos.x, y + originPos.y, z + originPos.z);
                     }
 
-                    VoxelShape voxelshape1 = collisionShape.move(x, y, z);
-                    if (!Shapes.joinIsNotEmpty(voxelshape1, this.entityShape, BooleanOp.AND)) {
+                    VoxelShape collisionShape1 = collisionShape.move(x, y, z);
+                    if (!Shapes.joinIsNotEmpty(collisionShape1, entityShape, BooleanOp.AND)) {
                         continue;
                     }
 
-                    return voxelshape1.move(originPos.getX(), originPos.getY(), originPos.getZ());
+                    return collisionShape1.move(originPos.x, originPos.y, originPos.z);
                 }
 
-                return this.endOfData();
+                return endOfData();
             }
         }
     }

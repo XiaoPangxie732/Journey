@@ -20,6 +20,7 @@ public class SimplifiedChineseLanguageProvider extends LanguageProvider {
         // Block
         addControllerBlockTranslations();
         add(BlockRegistry.COPPER_WIRE, "铜线");
+        add(BlockRegistry.CREATIVE_ENGINE, "创造引擎");
 
         // Item
         addMarkerTranslations();

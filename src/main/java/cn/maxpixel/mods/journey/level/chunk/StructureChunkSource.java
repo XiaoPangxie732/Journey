@@ -215,7 +215,10 @@ public class StructureChunkSource extends ChunkSource {
             try {
                 CompoundTag data = chunkStorage.read(pos);
                 if (data == null) {
-                    return new StructureLevelChunk(level, pos);
+                    StructureLevelChunk chunk = new StructureLevelChunk(level, pos);
+                    chunk.setLoaded(true);
+                    chunk.setFullStatus(() -> ChunkHolder.FullChunkStatus.TICKING);
+                    return chunk;
                 }
                 StructureLevelChunk chunk = ChunkLoader.loadChunk(level, pos, data);
                 chunk.setLoaded(true);

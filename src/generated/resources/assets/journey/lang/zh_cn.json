@@ -1,6 +1,7 @@
 {
   "block.journey.controller": "\u7ED3\u6784\u63A7\u5236\u5668",
   "block.journey.copper_wire": "\u94DC\u7EBF",
+  "block.journey.creative_engine": "\u521B\u9020\u5F15\u64CE",
   "item.journey.marker": "\u9009\u533A\u5DE5\u5177",
   "itemGroup.journey.main": "\u8FDC\u884C",
   "itemGroup.journey.memes": "\u8FDC\u884C | \u6897",

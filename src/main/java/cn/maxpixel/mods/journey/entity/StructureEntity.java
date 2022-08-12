@@ -5,16 +5,14 @@ import cn.maxpixel.mods.journey.level.StructureLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
@@ -36,10 +34,9 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     private UUID structureId;
     private boolean initialized;
     private StructureLevel structureLevel;
-    private BlockPos originPos;
-    private Vec3 originRelative;
-    private BlockPos oldBlockPosition;
-    private EntityDimensions dimensions;
+    private BlockPos originBlockPos;
+    private Vec3 originPos;
+    private Vec3 originRelative = Vec3.ZERO;
 
     public StructureEntity(EntityType<StructureEntity> type, Level level) {
         super(type, level);
@@ -52,7 +49,8 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     @CalledOn(CalledOn.Side.SERVER)
     public void createStructureLevel(Level parent, BlockPos start, Vec3i size, BlockPos controllerPos, Iterable<BlockPos> blocks) {
         this.structureLevel = new StructureLevel(parent, start, size, this);
-        this.originPos = controllerPos;
+        this.originBlockPos = controllerPos;
+        this.originPos = new Vec3(originBlockPos.getX(), originBlockPos.getY(), originBlockPos.getZ());
         reapplyPosition();
         structureLevel.moveBlocks(blocks, controllerPos);
         this.initialized = true;
@@ -78,7 +76,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     }
 
     public Vec3 getOriginRelative() {
-        return originRelative == null ? Vec3.ZERO : originRelative;
+        return originRelative;
     }
 
     @CalledOn(CalledOn.Side.CLIENT)
@@ -87,22 +85,26 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     }
 
     public int getPosXInParent(int x) {
-        return originPos.getX() + x;
+        return originBlockPos.getX() + x;
     }
 
     public int getPosYInParent(int y) {
-        return originPos.getY() + y;
+        return originBlockPos.getY() + y;
     }
 
     public int getPosZInParent(int z) {
-        return originPos.getZ() + z;
+        return originBlockPos.getZ() + z;
     }
 
     public BlockPos getPosInParent(BlockPos pos) {
-        return originPos.offset(pos);
+        return originBlockPos.offset(pos);
     }
 
-    public BlockPos getOriginPos() {
+    public BlockPos getOriginBlockPos() {
+        return originBlockPos;
+    }
+
+    public Vec3 getOriginPos() {
         return originPos;
     }
 
@@ -129,22 +131,23 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
 
     @Override
     public void tick() {
-        level.getProfiler().push("calculateOrigin");
-        BlockPos blockPos = blockPosition();
-        if (firstTick) {
-            this.oldBlockPosition = blockPos;
-            originRelative = position().subtract(originPos.getX(), originPos.getY(), originPos.getZ()).reverse();
-        }
-        if (!blockPos.equals(oldBlockPosition)) {
-            originPos.offset(blockPos.subtract(oldBlockPosition));
-            originRelative = position().subtract(originPos.getX(), originPos.getY(), originPos.getZ()).reverse();
-            this.oldBlockPosition = blockPos;
-        }
-        level.getProfiler().pop();
         super.tick();
         level.getProfiler().push("levelTick");
         structureLevel.tick();
         level.getProfiler().pop();
+        setDeltaMovement(getDeltaMovement().add(0, -0.04, 0));// gravity
+        move(MoverType.SELF, getDeltaMovement());
+    }
+
+    @Override
+    public void setPos(double x, double y, double z) {
+        Vec3 pos = position();
+        if (originPos != null && (firstTick || pos.x != x || pos.y != y || pos.z != z)) {
+            originPos = originPos.add(x - pos.x, y - pos.y, z - pos.z);
+            originBlockPos = new BlockPos(originPos);
+            originRelative = originPos.subtract(x, y, z);
+        }
+        super.setPos(x, y, z);
     }
 
     @Override
@@ -194,8 +197,9 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
                 setStructureId(tag.getUUID(STRUCTURE_ID_KEY));
                 int[] startPos = tag.getIntArray(START_KEY);
                 int[] size = tag.getIntArray(SIZE_KEY);
-                int[] originPos = tag.getIntArray(ORIGIN_POS_KEY);
-                this.originPos = new BlockPos(originPos[0], originPos[1], originPos[2]);
+                ListTag originPos = tag.getList(ORIGIN_POS_KEY, Tag.TAG_DOUBLE);
+                this.originPos = new Vec3(originPos.getDouble(0), originPos.getDouble(1), originPos.getDouble(2));
+                this.originBlockPos = new BlockPos(this.originPos);
                 this.structureLevel = new StructureLevel(level, new BlockPos(startPos[0], startPos[1], startPos[2]),
                         new Vec3i(size[0], size[1], size[2]), this);
             }
@@ -211,16 +215,18 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
             Vec3i size = structureLevel.size;
             tag.putIntArray(START_KEY, new int[] {start.getX(), start.getY(), start.getZ()});
             tag.putIntArray(SIZE_KEY, new int[] {size.getX(), size.getY(), size.getZ()});
-            tag.putIntArray(ORIGIN_POS_KEY, new int[] {originPos.getX(), originPos.getY(), originPos.getZ()});
+            tag.put(ORIGIN_POS_KEY, newDoubleList(originPos.x, originPos.y, originPos.z));
         }
     }
 
     @Override
     public void writeSpawnData(FriendlyByteBuf buffer) {
         if (initialized) {
-            buffer.writeBoolean(true);
-            buffer.writeBlockPos(originPos)
-                    .writeBlockPos(structureLevel.start)
+            buffer.writeBoolean(true)
+                    .writeDouble(originPos.x)
+                    .writeDouble(originPos.y)
+                    .writeDouble(originPos.z);
+            buffer.writeBlockPos(structureLevel.start)
                     .writeVarInt(structureLevel.size.getX())
                     .writeVarInt(structureLevel.size.getY())
                     .writeVarInt(structureLevel.size.getZ());
@@ -231,7 +237,8 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     @Override
     public void readSpawnData(FriendlyByteBuf additionalData) {
         if (additionalData.readBoolean()) {
-            this.originPos = additionalData.readBlockPos();
+            this.originPos = new Vec3(additionalData.readDouble(), additionalData.readDouble(), additionalData.readDouble());
+            this.originBlockPos = new BlockPos(originPos);
             structureLevel = new StructureLevel(level, additionalData.readBlockPos(), new Vec3i(additionalData.readVarInt(),
                     additionalData.readVarInt(), additionalData.readVarInt()), this);
             structureLevel.getChunkSource().readChunks(additionalData);
