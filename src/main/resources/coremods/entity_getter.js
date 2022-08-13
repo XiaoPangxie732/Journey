@@ -1,5 +1,4 @@
 var ASMAPI = Java.type('net.minecraftforge.coremod.api.ASMAPI')
-var AbstractInsnNode = Java.type('org.objectweb.asm.tree.AbstractInsnNode')
 var LabelNode = Java.type('org.objectweb.asm.tree.LabelNode')
 var VarInsnNode = Java.type('org.objectweb.asm.tree.VarInsnNode')
 var JumpInsnNode = Java.type('org.objectweb.asm.tree.JumpInsnNode')
