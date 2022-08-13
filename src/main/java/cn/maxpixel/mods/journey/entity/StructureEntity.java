@@ -1,5 +1,6 @@
 package cn.maxpixel.mods.journey.entity;
 
+import cn.maxpixel.mods.journey.JourneyMod;
 import cn.maxpixel.mods.journey.annotation.CalledOn;
 import cn.maxpixel.mods.journey.level.StructureLevel;
 import net.minecraft.core.BlockPos;
@@ -22,6 +23,7 @@ import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.UUID;
 
 import static cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity.*;
@@ -109,9 +111,23 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     }
 
     @Override
-    public void remove(RemovalReason pReason) {// TODO: Delete structure file when killed
-        super.remove(pReason);
-        structureLevel.close();
+    public void remove(RemovalReason reason) {// TODO: Delete structure file when killed
+        super.remove(reason);
+        if (!reason.shouldDestroy()) {
+            structureLevel.getChunkSource().save();
+        }
+        try {
+            structureLevel.close();
+        } catch (IOException e) {
+            JourneyMod.LOGGER.error("Error closing level", e);
+        }
+        if (reason.shouldDestroy()) {
+            try {
+                structureLevel.getChunkSource().delete();
+            } catch (IOException e) {
+                JourneyMod.LOGGER.error("Error deleting structure file", e);
+            }
+        }
     }
 
     @Override

@@ -30,6 +30,12 @@ import net.minecraft.world.ticks.LevelTicks;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
 public class StructureChunkSource extends ChunkSource {
@@ -103,9 +109,17 @@ public class StructureChunkSource extends ChunkSource {
         storage.readChunks(buf);
     }
 
-    @Override
-    public void close() {
+    public void save() {
         storage.save();
+    }
+
+    @Override
+    public void close() throws IOException {
+        storage.close();
+    }
+
+    public void delete() throws IOException {
+        storage.delete();
     }
 
     private interface Storage {
@@ -129,6 +143,12 @@ public class StructureChunkSource extends ChunkSource {
         void tick();
 
         void save();
+
+        default void close() throws IOException {
+        }
+
+        default void delete() throws IOException {
+        }
     }
 
     private class ClientStorage implements Storage {
@@ -244,6 +264,11 @@ public class StructureChunkSource extends ChunkSource {
         }
 
         @Override
+        public void close() throws IOException {
+            chunkStorage.close();
+        }
+
+        @Override
         public Long2ObjectOpenHashMap<StructureLevelChunk> getLoadedChunks() {
             return loadedChunks;
         }
@@ -306,6 +331,23 @@ public class StructureChunkSource extends ChunkSource {
                 }
             });
             profiler.pop();
+        }
+
+        @Override
+        public void delete() throws IOException {
+            Files.walkFileTree(level.getServer().getWorldPath(LevelResources.STRUCTURES).resolve(level.getStructureId().toString()), new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(Objects.requireNonNull(file));
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(Objects.requireNonNull(dir));
+                    return super.postVisitDirectory(dir, exc);
+                }
+            });
         }
     }
 }

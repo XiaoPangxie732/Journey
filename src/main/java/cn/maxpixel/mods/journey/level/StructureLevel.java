@@ -378,11 +378,6 @@ public class StructureLevel extends Level {
     }
 
     @Override
-    public void close() {
-        chunkSource.close();
-    }
-
-    @Override
     public void levelEvent(@Nullable Player pPlayer, int pType, BlockPos pPos, int pData) {// TODO
     }
 
