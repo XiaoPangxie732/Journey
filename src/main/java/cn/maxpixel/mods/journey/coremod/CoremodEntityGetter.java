@@ -8,11 +8,10 @@ import net.minecraft.core.Cursor3D;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
@@ -21,16 +20,35 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class CoremodEntityGetter {
-    public static boolean addStructureEntityCollisions(@Nullable Entity getterEntity, AABB box,
-                                                       ImmutableList.Builder<VoxelShape> builder, Entity entity) {
-        if (entity instanceof StructureEntity structureEntity) {
-            builder.addAll(new BlockCollisions(structureEntity.getStructureLevel(), getterEntity, box.move(
-                    structureEntity.getOriginPos().reverse()), structureEntity.getOriginPos()));
-            return true;
+    public static void addStructureEntityCollisions(EntityGetter thiz, @Nullable Entity getterEntity, AABB box,
+                                                    ImmutableList.Builder<VoxelShape> builder, List<Entity> list) {
+        list.removeIf(entity -> entity instanceof StructureEntity);
+        if (thiz instanceof Level level) {
+            level.getEntities().get(EntityTypeTest.forClass(StructureEntity.class), structureEntity -> {
+                if (box.intersects(structureEntity.getBoundingBox())) {
+                    builder.addAll(new BlockCollisions(structureEntity.getStructureLevel(), getterEntity, box.move(
+                            structureEntity.getOriginPos().reverse()), structureEntity.getOriginPos()));
+                }
+            });
         }
-        return false;
+    }
+
+    public static List<VoxelShape> addStructureEntityCollisions(List<VoxelShape> emptyList, EntityGetter thiz,
+                                                                @Nullable Entity getterEntity, AABB box) {
+        if (thiz instanceof Level level) {
+            ImmutableList.Builder<VoxelShape> builder = ImmutableList.builder();
+            level.getEntities().get(EntityTypeTest.forClass(StructureEntity.class), structureEntity -> {
+                if (box.intersects(structureEntity.getBoundingBox())) {
+                    builder.addAll(new BlockCollisions(structureEntity.getStructureLevel(), getterEntity, box.move(
+                            structureEntity.getOriginPos().reverse()), structureEntity.getOriginPos()));
+                }
+            });
+            return builder.build();
+        }
+        return emptyList;
     }
 
     private static class BlockCollisions extends AbstractIterator<VoxelShape> {

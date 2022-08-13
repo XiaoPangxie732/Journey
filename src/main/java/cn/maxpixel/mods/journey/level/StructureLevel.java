@@ -356,7 +356,7 @@ public class StructureLevel extends Level {
     }
 
     @Override
-    protected LevelEntityGetter<Entity> getEntities() {
+    public LevelEntityGetter<Entity> getEntities() {
         return EMPTY_ENTITY_GETTER;
     }
 
