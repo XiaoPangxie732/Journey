@@ -8,4 +8,8 @@ public class MathUtil {
     public static short sclamp(short val, short min, short max) {
         return val < min ? min : (val > max ? max : val);
     }
+
+    public static int max3(int a, int b, int c) {
+        return Math.max(a, Math.max(b, c));
+    }
 }

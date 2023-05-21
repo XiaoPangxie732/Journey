@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Cursor3D;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.AbortableIterationConsumer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.*;
@@ -32,6 +33,7 @@ public class CoremodEntityGetter {
                     builder.addAll(new BlockCollisions(structureEntity.getStructureLevel(), getterEntity, box.move(
                             structureEntity.getOriginPos().reverse()), structureEntity.getOriginPos()));
                 }
+                return AbortableIterationConsumer.Continuation.CONTINUE;
             });
         }
     }
@@ -45,6 +47,7 @@ public class CoremodEntityGetter {
                     builder.addAll(new BlockCollisions(structureEntity.getStructureLevel(), getterEntity, box.move(
                             structureEntity.getOriginPos().reverse()), structureEntity.getOriginPos()));
                 }
+                return AbortableIterationConsumer.Continuation.CONTINUE;
             });
             return builder.build();
         }

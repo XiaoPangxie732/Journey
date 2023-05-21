@@ -36,11 +36,15 @@ public class ControllerBlockEntity extends BlockEntity {
     public void set(int x, int y, int z, int xLen, int yLen, int zLen) {
         BlockPos pos = getBlockPos();
         start.set(x - pos.getX(), y - pos.getY(), z - pos.getZ());
-        size = new Vec3i(xLen, yLen, zLen);
+        setSize(xLen, yLen, zLen);
+    }
+
+    public void setSize(int x, int y, int z) {
+        this.size = new Vec3i(Math.max(x, 1), Math.max(y, 1), Math.max(z, 1));
     }
 
     public void setSize(Vec3i size) {
-        this.size = size;
+        setSize(size.getX(), size.getY(), size.getZ());
     }
 
     public BlockPos.MutableBlockPos getStart() {
@@ -58,7 +62,7 @@ public class ControllerBlockEntity extends BlockEntity {
     public void assemble() {
         if (!building || level == null || level.isClientSide) return;
 
-        StructureEntity entity = EntityRegistry.STRUCTURE.create(level);
+        StructureEntity entity = EntityRegistry.STRUCTURE.get().create(level);
         entity.moveTo(
                 worldPosition.getX() + start.getX() + size.getX() / 2d,
                 worldPosition.getY() + start.getY(),
@@ -100,7 +104,7 @@ public class ControllerBlockEntity extends BlockEntity {
         if (tag.contains(SIZE_KEY, Tag.TAG_INT_ARRAY)) {
             int[] size = tag.getIntArray(SIZE_KEY);
             if (size.length >= 3) {
-                this.size = new Vec3i(Math.max(size[0], 1), Math.max(size[1], 1), Math.max(size[2], 1));
+                setSize(size[0], size[1], size[2]);
             } else {
                 this.size = MathUtil.ONE;
             }
@@ -109,11 +113,7 @@ public class ControllerBlockEntity extends BlockEntity {
         }
 
         if (tag.contains(BUILDING_KEY, Tag.TAG_ANY_NUMERIC)) {
-            try {
-                this.building = tag.getBoolean(BUILDING_KEY);
-            } catch (IllegalArgumentException | NullPointerException e) {
-                this.building = true;
-            }
+            this.building = tag.getBoolean(BUILDING_KEY);
         } else {
             this.building = true;
         }

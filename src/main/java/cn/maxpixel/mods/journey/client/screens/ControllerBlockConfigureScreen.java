@@ -16,7 +16,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
-import static cn.maxpixel.mods.journey.client.screens.Constants.BUTTON_HEIGHT;
 import static cn.maxpixel.mods.journey.network.serverbound.ServerboundControllerBlockChangePacket.send;
 
 public class ControllerBlockConfigureScreen extends Screen {
@@ -39,6 +38,9 @@ public class ControllerBlockConfigureScreen extends Screen {
     private static final Component DISASSEMBLE = I18nUtil.getTranslation(BlockRegistry.CONTROLLER, I18nUtil.SCREEN_CATEGORY, "disassemble");
     private static final Component START_ABSENT = I18nUtil.getTranslation(ItemRegistry.MARKER, I18nUtil.MESSAGE_CATEGORY, "start.absent").withStyle(ChatFormatting.RED);
     private static final Component END_ABSENT = I18nUtil.getTranslation(ItemRegistry.MARKER, I18nUtil.MESSAGE_CATEGORY, "end.absent").withStyle(ChatFormatting.RED);
+    private static final Component[] XS = new Component[] {EXPAND_XP, SHRINK_XP, EXPAND_XN, SHRINK_XN};
+    private static final Component[] YS = new Component[] {EXPAND_YP, SHRINK_YP, EXPAND_YN, SHRINK_YN};
+    private static final Component[] ZS = new Component[] {EXPAND_ZP, SHRINK_ZP, EXPAND_ZN, SHRINK_ZN};
 
     private final ControllerBlockEntity blockEntity;
 
@@ -50,22 +52,31 @@ public class ControllerBlockConfigureScreen extends Screen {
     @Override
     protected void init() {
         if (blockEntity.isBuilding()) {
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2 - 1 - BUTTON_WIDTH, 40, BUTTON_WIDTH, BUTTON_HEIGHT, EXPAND_XP, btn -> send(blockEntity.getBlockPos(), AdjustType.EXPAND_POSITIVE, AdjustAxis.X)));
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2 - 1 - BUTTON_WIDTH, 40 + 1 + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_XP, btn -> send(blockEntity.getBlockPos(), AdjustType.SHRINK_POSITIVE, AdjustAxis.X)));
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2 - 1 - BUTTON_WIDTH, 40 + 2 + 2 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, EXPAND_XN, btn -> send(blockEntity.getBlockPos(), AdjustType.EXPAND_NEGATIVE, AdjustAxis.X)));
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2 - 1 - BUTTON_WIDTH, 40 + 3 + 3 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_XN, btn -> send(blockEntity.getBlockPos(), AdjustType.SHRINK_NEGATIVE, AdjustAxis.X)));
+            for (int i = 0; i < 4; i++) {
+                AdjustType adjustType = AdjustType.get(i);
+                addRenderableWidget(Button.builder(XS[i], btn -> send(blockEntity.getBlockPos(), adjustType, AdjustAxis.X))
+                        .pos(width / 2 - BUTTON_WIDTH / 2 - 1 - BUTTON_WIDTH, 40 + i + i * Button.DEFAULT_HEIGHT)
+                        .width(BUTTON_WIDTH)
+                        .build());
+            }
 
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2, 40, BUTTON_WIDTH, BUTTON_HEIGHT, EXPAND_YP, btn -> send(blockEntity.getBlockPos(), AdjustType.EXPAND_POSITIVE, AdjustAxis.Y)));
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2, 40 + 1 + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_YP, btn -> send(blockEntity.getBlockPos(), AdjustType.SHRINK_POSITIVE, AdjustAxis.Y)));
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2, 40 + 2 + 2 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, EXPAND_YN, btn -> send(blockEntity.getBlockPos(), AdjustType.EXPAND_NEGATIVE, AdjustAxis.Y)));
-            addRenderableWidget(new Button(width / 2 - BUTTON_WIDTH / 2, 40 + 3 + 3 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_YN, btn -> send(blockEntity.getBlockPos(), AdjustType.SHRINK_NEGATIVE, AdjustAxis.Y)));
+            for (int i = 0; i < 4; i++) {
+                AdjustType adjustType = AdjustType.get(i);
+                addRenderableWidget(Button.builder(YS[i], btn -> send(blockEntity.getBlockPos(), adjustType, AdjustAxis.Y))
+                        .pos(width / 2 - BUTTON_WIDTH / 2, 40 + i + i * Button.DEFAULT_HEIGHT)
+                        .width(BUTTON_WIDTH)
+                        .build());
+            }
 
-            addRenderableWidget(new Button(width / 2 + BUTTON_WIDTH / 2 + 1, 40, BUTTON_WIDTH, BUTTON_HEIGHT, EXPAND_ZP, btn -> send(blockEntity.getBlockPos(), AdjustType.EXPAND_POSITIVE, AdjustAxis.Z)));
-            addRenderableWidget(new Button(width / 2 + BUTTON_WIDTH / 2 + 1, 40 + 1 + BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_ZP, btn -> send(blockEntity.getBlockPos(), AdjustType.SHRINK_POSITIVE, AdjustAxis.Z)));
-            addRenderableWidget(new Button(width / 2 + BUTTON_WIDTH / 2 + 1, 40 + 2 + 2 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, EXPAND_ZN, btn -> send(blockEntity.getBlockPos(), AdjustType.EXPAND_NEGATIVE, AdjustAxis.Z)));
-            addRenderableWidget(new Button(width / 2 + BUTTON_WIDTH / 2 + 1, 40 + 3 + 3 * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SHRINK_ZN, btn -> send(blockEntity.getBlockPos(), AdjustType.SHRINK_NEGATIVE, AdjustAxis.Z)));
+            for (int i = 0; i < 4; i++) {
+                AdjustType adjustType = AdjustType.get(i);
+                addRenderableWidget(Button.builder(ZS[i], btn -> send(blockEntity.getBlockPos(), adjustType, AdjustAxis.Z))
+                        .pos(width / 2 + BUTTON_WIDTH / 2 + 1, 40 + i + i * Button.DEFAULT_HEIGHT)
+                        .width(BUTTON_WIDTH)
+                        .build());
+            }
 
-            addRenderableWidget(new Button(width / 2 - 151, 40 + 4 + 4 * BUTTON_HEIGHT, 302, BUTTON_HEIGHT, SUBMIT_AREA, btn -> {
+            addRenderableWidget(Button.builder(SUBMIT_AREA, btn -> {
                 if (MarkerItem.start == null) {
                     Minecraft.getInstance().player.displayClientMessage(START_ABSENT, false);
                 } else if (MarkerItem.end == null) {
@@ -74,18 +85,18 @@ public class ControllerBlockConfigureScreen extends Screen {
                     send(blockEntity.getBlockPos(), MarkerItem.start, MarkerItem.end);
                     MarkerItem.clearMark();
                 }
-            }));
-            addRenderableWidget(new Button(width / 2 - 151, 40 + 5 + 5 * BUTTON_HEIGHT, 150, BUTTON_HEIGHT, ASSEMBLE, btn -> {
+            }).pos(width / 2 - 151, 40 + 4 + 4 * Button.DEFAULT_HEIGHT).width(302).build());
+            addRenderableWidget(Button.builder(ASSEMBLE, btn -> {
                 ServerboundStructureAssemblePacket.sendAssemble(blockEntity.getBlockPos());
                 onClose();
-            }));
-            addRenderableWidget(new Button(width / 2 + 1, 40 + 5 + 5 * BUTTON_HEIGHT, 150, BUTTON_HEIGHT, CommonComponents.GUI_DONE, btn -> onClose()));
+            }).pos(width / 2 - 151, 40 + 5 + 5 * Button.DEFAULT_HEIGHT).build());
+            addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, btn -> onClose()).pos(width / 2 + 1, 40 + 5 + 5 * Button.DEFAULT_HEIGHT).build());
         } else {
-            addRenderableWidget(new Button(width / 2 - 151, 40, 150, BUTTON_HEIGHT, DISASSEMBLE, btn -> {
+            addRenderableWidget(Button.builder(DISASSEMBLE, btn -> {
                 ServerboundStructureAssemblePacket.sendDisassemble(blockEntity.getBlockPos());
                 onClose();
-            }));
-            addRenderableWidget(new Button(width / 2 - 1, 40, 150, BUTTON_HEIGHT, CommonComponents.GUI_CANCEL, btn -> onClose()));
+            }).pos(width / 2 - 151, 40).build());
+            addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, btn -> onClose()).pos(width / 2 - 1, 40).build());
         }
     }
 

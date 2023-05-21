@@ -10,6 +10,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
 import net.minecraft.world.damagesource.DamageSource;
@@ -160,7 +161,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
         Vec3 pos = position();
         if (originPos != null && (firstTick || pos.x != x || pos.y != y || pos.z != z)) {
             originPos = originPos.add(x - pos.x, y - pos.y, z - pos.z);
-            originBlockPos = new BlockPos(originPos);
+            originBlockPos = BlockPos.containing(originPos);
             originRelative = originPos.subtract(x, y, z);
         }
         super.setPos(x, y, z);
@@ -215,7 +216,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
                 int[] size = tag.getIntArray(SIZE_KEY);
                 ListTag originPos = tag.getList(ORIGIN_POS_KEY, Tag.TAG_DOUBLE);
                 this.originPos = new Vec3(originPos.getDouble(0), originPos.getDouble(1), originPos.getDouble(2));
-                this.originBlockPos = new BlockPos(this.originPos);
+                this.originBlockPos = BlockPos.containing(this.originPos);
                 this.structureLevel = new StructureLevel(level, new BlockPos(startPos[0], startPos[1], startPos[2]),
                         new Vec3i(size[0], size[1], size[2]), this);
             }
@@ -254,7 +255,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     public void readSpawnData(FriendlyByteBuf additionalData) {
         if (additionalData.readBoolean()) {
             this.originPos = new Vec3(additionalData.readDouble(), additionalData.readDouble(), additionalData.readDouble());
-            this.originBlockPos = new BlockPos(originPos);
+            this.originBlockPos = BlockPos.containing(this.originPos);
             structureLevel = new StructureLevel(level, additionalData.readBlockPos(), new Vec3i(additionalData.readVarInt(),
                     additionalData.readVarInt(), additionalData.readVarInt()), this);
             structureLevel.getChunkSource().readChunks(additionalData);
@@ -292,7 +293,7 @@ public class StructureEntity extends Entity implements IEntityAdditionalSpawnDat
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 }

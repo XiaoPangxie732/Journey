@@ -8,12 +8,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 
 import javax.annotation.Nonnull;
@@ -60,7 +60,7 @@ public class CopperWireBlockEntity extends BlockEntity {
     @Override
     @Nonnull
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        return CapabilityEnergy.ENERGY.orEmpty(cap, optional);
+        return ForgeCapabilities.ENERGY.orEmpty(cap, optional);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class CopperWireBlockEntity extends BlockEntity {
                 level.explode(null,
                         pos.getX() + .5d, pos.getY() + .5d, pos.getZ() + .5d,
                         6.5f, true,
-                        Explosion.BlockInteraction.DESTROY
+                        Level.ExplosionInteraction.BLOCK
                 );
             }
             this.energyStored = Mth.clamp(energy, 0, getMaxEnergyStored());

@@ -93,7 +93,12 @@ public record ServerboundControllerBlockChangePacket(Type type, BlockPos control
     }
 
     public enum AdjustType {
-        EXPAND_POSITIVE, EXPAND_NEGATIVE, SHRINK_POSITIVE, SHRINK_NEGATIVE
+        EXPAND_POSITIVE, SHRINK_POSITIVE, EXPAND_NEGATIVE, SHRINK_NEGATIVE;
+        private static final AdjustType[] VALUES = AdjustType.values();
+
+        public static AdjustType get(int ordinal) {
+            return VALUES[ordinal];
+        }
     }
 
     public enum AdjustAxis {

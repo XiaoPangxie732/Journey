@@ -4,8 +4,6 @@ import cn.maxpixel.mods.journey.entity.StructureEntity;
 import cn.maxpixel.mods.journey.level.StructureLevel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
-import com.mojang.math.Vector4f;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -24,20 +22,18 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.model.data.EmptyModelData;
-
-import java.util.List;
-import java.util.Random;
+import net.minecraftforge.client.model.data.ModelData;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
-    private static final List<RenderType> CHUNK_BUFFER_LAYERS = RenderType.chunkBufferLayers();
 //    private final Map<RenderType, VertexBuffer> buffers = RenderType.chunkBufferLayers().stream()
 //            .collect(Collectors.toMap(Function.identity(), v -> new VertexBuffer()));
 //    private final ChunkBufferBuilderPack pack = new ChunkBufferBuilderPack();
@@ -63,6 +59,7 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
         StructureLevel structureLevel = entity.getStructureLevel();
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
         BlockEntityRenderDispatcher blockEntityRenderDispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
+        RandomSource random = RandomSource.create();
         stack.pushPose();
         Vec3 relative = entity.getOriginRelative();
         stack.translate(relative.x, relative.y, relative.z);
@@ -71,27 +68,30 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
             stack.translate(pos.getX(), pos.getY(), pos.getZ());
             BlockState state = structureLevel.getBlockState(pos);
             FluidState fluid = state.getFluidState();
-            for (RenderType chunkBufferLayer : CHUNK_BUFFER_LAYERS) {
-                ForgeHooksClient.setRenderType(chunkBufferLayer);
-                if (!fluid.isEmpty() && ItemBlockRenderTypes.canRenderInLayer(fluid, chunkBufferLayer)) {
-                    stack.pushPose();
-                    stack.translate(
-                            -SectionPos.sectionRelative(pos.getX()),
-                            -SectionPos.sectionRelative(pos.getY()),
-                            -SectionPos.sectionRelative(pos.getZ())
-                    );
-                    blockRenderer.renderLiquid(pos, structureLevel, new TransformingVertexConsumer(
-                            buffer.getBuffer(chunkBufferLayer), stack.last()), state, fluid);
-                    stack.popPose();
-                }
-                if (state.getRenderShape() != RenderShape.INVISIBLE && ItemBlockRenderTypes.canRenderInLayer(state, chunkBufferLayer)) {
+
+            if (!fluid.isEmpty()) {
+                RenderType renderLayer = ItemBlockRenderTypes.getRenderLayer(fluid);
+                stack.pushPose();
+                stack.translate(
+                        -SectionPos.sectionRelative(pos.getX()),
+                        -SectionPos.sectionRelative(pos.getY()),
+                        -SectionPos.sectionRelative(pos.getZ())
+                );
+                blockRenderer.renderLiquid(pos, structureLevel, new TransformingVertexConsumer(
+                        buffer.getBuffer(renderLayer), stack.last()), state, fluid);
+                stack.popPose();
+            }
+            if (state.getRenderShape() != RenderShape.INVISIBLE) {
+                var model = blockRenderer.getBlockModel(state);
+                var modelData = model.getModelData(structureLevel, pos, state, ModelData.EMPTY);
+                random.setSeed(state.getSeed(pos));
+                for (RenderType renderType : model.getRenderTypes(state, random, modelData)) {
                     blockRenderer.renderBatched(
-                            state, pos, structureLevel, stack, buffer.getBuffer(chunkBufferLayer),
-                            true, new Random(), EmptyModelData.INSTANCE
+                            state, pos, structureLevel, stack, buffer.getBuffer(renderType),
+                            true, random, ModelData.EMPTY, renderType, false
                     );
                 }
             }
-            ForgeHooksClient.setRenderType(null);
             if (state.hasBlockEntity()) {
                 BlockEntity blockEntity = structureLevel.getBlockEntity(pos);
                 if (blockEntity != null) {
@@ -229,7 +229,7 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
         @Override
         public TransformingVertexConsumer vertex(double x, double y, double z) {
             Vector4f vector = new Vector4f((float) x, (float) y, (float) z, 1);
-            vector.transform(pose.pose());
+            vector.mul(pose.pose());
             parent.vertex(vector.x(), vector.y(), vector.z());
             return this;
         }
@@ -261,7 +261,7 @@ public class StructureEntityRenderer extends EntityRenderer<StructureEntity> {
         @Override
         public TransformingVertexConsumer normal(float x, float y, float z) {
             Vector3f vector = new Vector3f(x, y, z);
-            vector.transform(pose.normal());
+            vector.mul(pose.normal());
             parent.normal(vector.x(), vector.y(), vector.z());
             return this;
         }

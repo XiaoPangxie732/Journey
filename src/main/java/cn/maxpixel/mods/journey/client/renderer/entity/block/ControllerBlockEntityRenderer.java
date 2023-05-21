@@ -1,6 +1,7 @@
 package cn.maxpixel.mods.journey.client.renderer.entity.block;
 
 import cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity;
+import cn.maxpixel.mods.journey.util.MathUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -10,6 +11,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.world.phys.Vec3;
 
 public class ControllerBlockEntityRenderer implements BlockEntityRenderer<ControllerBlockEntity> {
     public ControllerBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
@@ -20,14 +22,12 @@ public class ControllerBlockEntityRenderer implements BlockEntityRenderer<Contro
         if (blockEntity.isBuilding()) {
             BlockPos start = blockEntity.getStart();
             Vec3i size = blockEntity.getSize();
-            if (size.getX() >= 1 && size.getY() >= 1 && size.getZ() >= 1) {
-                VertexConsumer lines = bufferSource.getBuffer(RenderType.lines());
-                int x = start.getX();
-                int y = start.getY();
-                int z = start.getZ();
-                LevelRenderer.renderLineBox(poseStack, lines, x, y, z, x + size.getX(), y + size.getY(), z + size.getZ(),
-                        .9f, .9f, .9f, 1f, .5f, .5f, .5f);
-            }
+            VertexConsumer lines = bufferSource.getBuffer(RenderType.lines());
+            int x = start.getX();
+            int y = start.getY();
+            int z = start.getZ();
+            LevelRenderer.renderLineBox(poseStack, lines, x, y, z, x + size.getX(), y + size.getY(), z + size.getZ(),
+                    .9f, .9f, .9f, 1f, .5f, .5f, .5f);
         }
     }
 
@@ -37,7 +37,9 @@ public class ControllerBlockEntityRenderer implements BlockEntityRenderer<Contro
     }
 
     @Override
-    public int getViewDistance() {
-        return 384;
+    public boolean shouldRender(ControllerBlockEntity blockEntity, Vec3 cameraPos) {
+        return Vec3.atCenterOf(blockEntity.getBlockPos()).closerThan(cameraPos,
+                MathUtil.max3(blockEntity.getSize().getX(), blockEntity.getSize().getY(),
+                        blockEntity.getSize().getZ()) + getViewDistance());
     }
 }
