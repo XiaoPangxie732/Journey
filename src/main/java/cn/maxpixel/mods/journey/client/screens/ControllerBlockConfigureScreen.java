@@ -5,8 +5,8 @@ import cn.maxpixel.mods.journey.item.MarkerItem;
 import cn.maxpixel.mods.journey.network.serverbound.ServerboundControllerBlockChangePacket.AdjustAxis;
 import cn.maxpixel.mods.journey.network.serverbound.ServerboundControllerBlockChangePacket.AdjustType;
 import cn.maxpixel.mods.journey.network.serverbound.ServerboundStructureAssemblePacket;
-import cn.maxpixel.mods.journey.registries.BlockRegistry;
-import cn.maxpixel.mods.journey.registries.ItemRegistry;
+import cn.maxpixel.mods.journey.registry.BlockRegistry;
+import cn.maxpixel.mods.journey.registry.ItemRegistry;
 import cn.maxpixel.mods.journey.util.I18nUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
@@ -21,7 +21,7 @@ import static cn.maxpixel.mods.journey.network.serverbound.ServerboundController
 
 public class ControllerBlockConfigureScreen extends Screen {
     private static final int BUTTON_WIDTH = 100;
-    private static final Component TITLE = BlockRegistry.CONTROLLER.getName();
+    private static final Component TITLE = BlockRegistry.CONTROLLER.get().getName();
     private static final Component EXPAND_XP = I18nUtil.getTranslation(BlockRegistry.CONTROLLER, I18nUtil.SCREEN_CATEGORY, "expand_xp");
     private static final Component SHRINK_XP = I18nUtil.getTranslation(BlockRegistry.CONTROLLER, I18nUtil.SCREEN_CATEGORY, "shrink_xp");
     private static final Component EXPAND_XN = I18nUtil.getTranslation(BlockRegistry.CONTROLLER, I18nUtil.SCREEN_CATEGORY, "expand_xn");

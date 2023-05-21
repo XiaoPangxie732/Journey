@@ -1,48 +1,52 @@
-package cn.maxpixel.mods.journey.registries;
+package cn.maxpixel.mods.journey.registry;
 
+import cn.maxpixel.mods.journey.JourneyMod;
 import cn.maxpixel.mods.journey.block.ControllerBlock;
 import cn.maxpixel.mods.journey.block.CopperWireBlock;
 import cn.maxpixel.mods.journey.block.CreativeEngineBlock;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Supplier;
 
 public class BlockRegistry {
-    private static final Object2ObjectArrayMap<String, BlockItem> BLOCK_ITEMS = new Object2ObjectArrayMap<>();
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, JourneyMod.MODID);
 
-    public static final ControllerBlock CONTROLLER = registerWithItem(
+    public static final RegistryObject<ControllerBlock> CONTROLLER = registerWithItem(
             ControllerBlock.NAME,
-            new ControllerBlock(
+            () -> new ControllerBlock(
                     BlockBehaviour.Properties.of(Material.METAL)
                             .requiresCorrectToolForDrops()
                             .strength(5.f, 3600000)
-            ),
-            new Item.Properties().tab(Tabs.MAIN)
+            ), Item.Properties::new
     );
 
-    public static final CopperWireBlock COPPER_WIRE = registerWithItem(
+    public static final RegistryObject<CopperWireBlock> COPPER_WIRE = registerWithItem(
             CopperWireBlock.NAME,
-            new CopperWireBlock(
+            () -> new CopperWireBlock(
                     BlockBehaviour.Properties.of(Material.METAL, MaterialColor.COLOR_ORANGE)
                             .strength(2.f, 5.f)
                             .sound(SoundType.COPPER)
                             .isRedstoneConductor((state, getter, pos) -> false)
                             .noOcclusion()
-            ), new Item.Properties().tab(CreativeModeTab.TAB_REDSTONE)
+            ), Item.Properties::new
     );
 
-    public static final CreativeEngineBlock CREATIVE_ENGINE = registerWithItem(
+    public static final RegistryObject<CreativeEngineBlock> CREATIVE_ENGINE = registerWithItem(
             CreativeEngineBlock.NAME,
-            new CreativeEngineBlock(
+            () -> new CreativeEngineBlock(
                     BlockBehaviour.Properties.of(Material.METAL)
                             .strength(2.f)
-            ), new Item.Properties().tab(Tabs.MAIN)
+            ), Item.Properties::new
     );
 
     /**
@@ -53,14 +57,13 @@ public class BlockRegistry {
      * @param <T> Block type
      * @return Registry object
      */
-    private static <T extends Block> T registerWithItem(String name, T block, Item.Properties props) {
-        BLOCK_ITEMS.put(name, new BlockItem(block, props)); // should I use supplier here?
-        return Registries.registerBlock(name, block);
+    private static <T extends Block> RegistryObject<T> registerWithItem(String name, Supplier<T> block, Supplier<Item.Properties> props) {
+        RegistryObject<T> blockObject = BLOCKS.register(name, block);
+        ItemRegistry.ITEMS.register(name, () -> new BlockItem(blockObject.get(), props.get()));
+        return blockObject;
     }
 
-    static void registerBlockItems() {
-        BLOCK_ITEMS.forEach(Registries::registerItem);
+    static void init(IEventBus modBus) {
+        BLOCKS.register(modBus);
     }
-
-    static void init() { /* Trigger <clinit> */ }
 }

@@ -1,8 +1,8 @@
 package cn.maxpixel.mods.journey.block.entity;
 
 import cn.maxpixel.mods.journey.entity.StructureEntity;
-import cn.maxpixel.mods.journey.registries.BlockEntityRegistry;
-import cn.maxpixel.mods.journey.registries.EntityRegistry;
+import cn.maxpixel.mods.journey.registry.BlockEntityRegistry;
+import cn.maxpixel.mods.journey.registry.EntityRegistry;
 import cn.maxpixel.mods.journey.util.MathUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -30,7 +30,7 @@ public class ControllerBlockEntity extends BlockEntity {
     private UUID structureId = UUID.randomUUID();
 
     public ControllerBlockEntity(BlockPos worldPosition, BlockState blockState) {
-        super(BlockEntityRegistry.CONTROLLER, worldPosition, blockState);
+        super(BlockEntityRegistry.CONTROLLER.get(), worldPosition, blockState);
     }
 
     public void set(int x, int y, int z, int xLen, int yLen, int zLen) {

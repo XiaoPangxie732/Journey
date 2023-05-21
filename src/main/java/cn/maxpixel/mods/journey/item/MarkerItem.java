@@ -1,7 +1,7 @@
 package cn.maxpixel.mods.journey.item;
 
 import cn.maxpixel.mods.journey.JourneyMod;
-import cn.maxpixel.mods.journey.registries.ItemRegistry;
+import cn.maxpixel.mods.journey.registry.ItemRegistry;
 import cn.maxpixel.mods.journey.util.I18nUtil;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -17,6 +17,8 @@ import net.minecraft.world.level.block.state.BlockState;
  * @see cn.maxpixel.mods.journey.network.clientbound.ClientboundClearMarkPacket
  */
 public class MarkerItem extends Item {
+    public static final String NAME = "marker";
+
     public static BlockPos start;
     public static BlockPos end;
 

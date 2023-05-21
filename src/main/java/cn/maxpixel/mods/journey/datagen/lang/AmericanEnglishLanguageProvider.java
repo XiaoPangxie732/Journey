@@ -1,33 +1,33 @@
 package cn.maxpixel.mods.journey.datagen.lang;
 
-import cn.maxpixel.mods.journey.registries.BlockRegistry;
-import cn.maxpixel.mods.journey.registries.ItemRegistry;
-import cn.maxpixel.mods.journey.registries.Tabs;
+import cn.maxpixel.mods.journey.registry.BlockRegistry;
+import cn.maxpixel.mods.journey.registry.ItemRegistry;
+import cn.maxpixel.mods.journey.registry.TabRegistry;
 import cn.maxpixel.mods.journey.util.I18nUtil;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 
-public class EnglishLanguageProvider extends LanguageProvider {
-    public EnglishLanguageProvider(DataGenerator gen, String modid, String locale) {
-        super(gen, modid, locale);
+public class AmericanEnglishLanguageProvider extends LanguageProvider {
+    public AmericanEnglishLanguageProvider(PackOutput output) {
+        super(output, "en_us");
     }
 
     @Override
     protected void addTranslations() {
         // ItemGroup
-        addItemGroup(Tabs.MAIN_LABEL, "Journey");
-        addItemGroup(Tabs.MEMES_LABEL, "Journey | Memes");
+        add(TabRegistry.MAIN_I18N, "Journey");
+        add(TabRegistry.MEMES_I18N, "Journey | Memes");
 
         // Block
         addControllerBlockTranslations();
-        add(BlockRegistry.COPPER_WIRE, "Copper Wire");
-        add(BlockRegistry.CREATIVE_ENGINE, "Creative Engine");
+        addBlock(BlockRegistry.COPPER_WIRE, "Copper Wire");
+        addBlock(BlockRegistry.CREATIVE_ENGINE, "Creative Engine");
 
         // Item
         addMarkerTranslations();
     }
 
     private void addControllerBlockTranslations() {
-        add(BlockRegistry.CONTROLLER, "Structure Controller");
+        addBlock(BlockRegistry.CONTROLLER, "Structure Controller");
 
         // Screen
         addCustom(BlockRegistry.CONTROLLER, I18nUtil.SCREEN_CATEGORY, "expand_xp", "Expand to X+");
@@ -49,7 +49,7 @@ public class EnglishLanguageProvider extends LanguageProvider {
     }
 
     private void addMarkerTranslations() {
-        add(ItemRegistry.MARKER, "Marker");
+        addItem(ItemRegistry.MARKER, "Marker");
 
         addCustom(ItemRegistry.MARKER, I18nUtil.MESSAGE_CATEGORY, "start.set", "Set start position: %s");
         addCustom(ItemRegistry.MARKER, I18nUtil.MESSAGE_CATEGORY, "end.set", "Set end position: %s");

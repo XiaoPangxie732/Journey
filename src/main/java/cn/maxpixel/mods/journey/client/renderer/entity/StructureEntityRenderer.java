@@ -1,4 +1,4 @@
-package cn.maxpixel.mods.journey.client.renderers.entity;
+package cn.maxpixel.mods.journey.client.renderer.entity;
 
 import cn.maxpixel.mods.journey.entity.StructureEntity;
 import cn.maxpixel.mods.journey.level.StructureLevel;

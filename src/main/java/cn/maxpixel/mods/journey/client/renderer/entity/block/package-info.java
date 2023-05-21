@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cn.maxpixel.mods.journey.client.renderers.entity.block;
+package cn.maxpixel.mods.journey.client.renderer.entity.block;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

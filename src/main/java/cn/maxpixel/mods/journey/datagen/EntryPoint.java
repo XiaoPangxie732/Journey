@@ -1,14 +1,17 @@
 package cn.maxpixel.mods.journey.datagen;
 
 import cn.maxpixel.mods.journey.JourneyMod;
-import cn.maxpixel.mods.journey.datagen.lang.EnglishLanguageProvider;
+import cn.maxpixel.mods.journey.datagen.lang.AmericanEnglishLanguageProvider;
 import cn.maxpixel.mods.journey.datagen.lang.SimplifiedChineseLanguageProvider;
 import cn.maxpixel.mods.journey.datagen.tags.BlockTagsProvider;
 import com.mojang.logging.LogUtils;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.data.DataProvider;
+import net.minecraft.data.PackOutput;
+import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.slf4j.Logger;
 
 @Mod.EventBusSubscriber(modid = JourneyMod.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -19,16 +22,18 @@ public class EntryPoint {
     public static void onGatherData(GatherDataEvent event) {
         LOGGER.info("Gathering data");
         DataGenerator generator = event.getGenerator();
+        PackOutput output = generator.getPackOutput();
+        ExistingFileHelper fileHelper = event.getExistingFileHelper();
 
         // lang
-        generator.addProvider(new EnglishLanguageProvider(generator, JourneyMod.MODID, "en_us"));
-        generator.addProvider(new SimplifiedChineseLanguageProvider(generator, JourneyMod.MODID, "zh_cn"));
+        generator.addProvider(event.includeClient(), (DataProvider.Factory<AmericanEnglishLanguageProvider>) AmericanEnglishLanguageProvider::new);
+        generator.addProvider(event.includeClient(), (DataProvider.Factory<SimplifiedChineseLanguageProvider>) SimplifiedChineseLanguageProvider::new);
 
-        // blocks & items
-        generator.addProvider(new BlockStates(generator, JourneyMod.MODID, event.getExistingFileHelper()));
-        generator.addProvider(new ItemModels(generator, JourneyMod.MODID, event.getExistingFileHelper()));
+        // block states & item models
+        generator.addProvider(event.includeClient(), new BlockStates(output, fileHelper));
+        generator.addProvider(event.includeClient(), new ItemModels(output, fileHelper));
 
         // tags
-        generator.addProvider(new BlockTagsProvider(generator, JourneyMod.MODID, event.getExistingFileHelper()));
+        generator.addProvider(event.includeServer(), new BlockTagsProvider(output, event.getLookupProvider(), fileHelper));
     }
 }

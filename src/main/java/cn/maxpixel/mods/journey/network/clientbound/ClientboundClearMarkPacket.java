@@ -38,7 +38,7 @@ public class ClientboundClearMarkPacket {
     @SubscribeEvent
     @CalledOn(CalledOn.Side.SERVER)
     public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
-        JourneyMod.LOGGER.debug("Clearing mark of {}", event.getPlayer().getGameProfile().getName());
-        NetworkManager.CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()), new ClientboundClearMarkPacket());
+        JourneyMod.LOGGER.debug("Clearing mark of {}", event.getEntity().getGameProfile().getName());
+        NetworkManager.CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()), new ClientboundClearMarkPacket());
     }
 }

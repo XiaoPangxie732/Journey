@@ -1,7 +1,7 @@
-package cn.maxpixel.mods.journey.client.renderers.entity.block;
+package cn.maxpixel.mods.journey.client.renderer.entity.block;
 
 import cn.maxpixel.mods.journey.block.entity.CopperWireBlockEntity;
-import cn.maxpixel.mods.journey.client.registries.TextureRegistry;
+import cn.maxpixel.mods.journey.client.registry.TextureRegistry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Vector3f;

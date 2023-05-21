@@ -2,7 +2,7 @@ package cn.maxpixel.mods.journey.block;
 
 import cn.maxpixel.mods.journey.block.entity.CreativeEngineBlockEntity;
 import cn.maxpixel.mods.journey.level.StructureLevel;
-import cn.maxpixel.mods.journey.registries.BlockEntityRegistry;
+import cn.maxpixel.mods.journey.registry.BlockEntityRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -34,7 +34,7 @@ public class CreativeEngineBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level instanceof StructureLevel ? createTickerHelper(type, BlockEntityRegistry.CREATIVE_ENGINE,
+        return level instanceof StructureLevel ? createTickerHelper(type, BlockEntityRegistry.CREATIVE_ENGINE.get(),
                 CreativeEngineBlockEntity::tick) : null;
     }
 }

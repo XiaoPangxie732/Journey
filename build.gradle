@@ -8,7 +8,7 @@ plugins {
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
-version = '1.18.2-0.0.1.0'
+version = '1.19.4-0.0.1.0'
 group = 'cn.maxpixel.mods' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 base.archivesBaseName = 'journey'
 

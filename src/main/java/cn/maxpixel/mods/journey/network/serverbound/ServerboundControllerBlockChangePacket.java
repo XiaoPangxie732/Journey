@@ -3,7 +3,7 @@ package cn.maxpixel.mods.journey.network.serverbound;
 import cn.maxpixel.mods.journey.JourneyMod;
 import cn.maxpixel.mods.journey.block.entity.ControllerBlockEntity;
 import cn.maxpixel.mods.journey.network.NetworkManager;
-import cn.maxpixel.mods.journey.registries.BlockRegistry;
+import cn.maxpixel.mods.journey.registry.BlockRegistry;
 import cn.maxpixel.mods.journey.util.BlockGetterUtil;
 import cn.maxpixel.mods.journey.util.I18nUtil;
 import net.minecraft.core.BlockPos;

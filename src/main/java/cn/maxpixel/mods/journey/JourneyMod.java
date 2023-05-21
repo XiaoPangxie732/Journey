@@ -1,6 +1,6 @@
 package cn.maxpixel.mods.journey;
 
-import cn.maxpixel.mods.journey.registries.Registries;
+import cn.maxpixel.mods.journey.registry.Registries;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;

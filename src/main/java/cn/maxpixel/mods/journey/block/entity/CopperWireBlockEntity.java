@@ -1,7 +1,7 @@
 package cn.maxpixel.mods.journey.block.entity;
 
 import cn.maxpixel.mods.journey.block.CopperWireBlock;
-import cn.maxpixel.mods.journey.registries.BlockEntityRegistry;
+import cn.maxpixel.mods.journey.registry.BlockEntityRegistry;
 import cn.maxpixel.mods.journey.util.MathUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,7 +29,7 @@ public class CopperWireBlockEntity extends BlockEntity {
     private final LazyOptional<IEnergyStorage> optional = LazyOptional.of(() -> storage);
 
     public CopperWireBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
-        super(BlockEntityRegistry.COPPER_WIRE, pWorldPosition, pBlockState);
+        super(BlockEntityRegistry.COPPER_WIRE.get(), pWorldPosition, pBlockState);
     }
 
     public short getCount() {
